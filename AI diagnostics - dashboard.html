@@ -27,10 +27,11 @@
             </div>
             
             <div class="flex items-center gap-4">
-                <button id="reset-btn" onclick="handleReset()" class="bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] uppercase font-bold tracking-widest px-4 py-2.5 rounded-xl transition-all border border-white/5">
+                <!-- Sjednocená velikost tlačítek pomocí px-6 py-3 a min-w -->
+                <button id="reset-btn" onclick="handleReset()" class="min-w-[160px] bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] uppercase font-bold tracking-widest px-6 py-3 rounded-xl transition-all border border-white/5">
                     Vynulovat data
                 </button>
-                <button id="export-csv-btn" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] uppercase font-bold tracking-widest px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2">
+                <button id="export-csv-btn" class="min-w-[160px] bg-blue-600 hover:bg-blue-700 text-white text-[10px] uppercase font-bold tracking-widest px-6 py-3 rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2">
                     <i data-lucide="file-spreadsheet" size="14"></i> Exportovat CSV
                 </button>
                 <div class="text-right border-l border-white/10 pl-6">
@@ -135,14 +136,16 @@
             if (!isConfirming) {
                 isConfirming = true;
                 btn.innerText = "Opravdu smazat vše?";
-                btn.classList.remove('bg-slate-800', 'text-slate-400');
-                btn.classList.add('bg-red-600', 'text-white', 'animate-pulse');
+                // Přidání červené barvy a hover efektu
+                btn.classList.remove('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
+                btn.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
+                
                 setTimeout(() => {
                     if (isConfirming) {
                         isConfirming = false;
                         btn.innerText = "Vynulovat data";
-                        btn.classList.remove('bg-red-600', 'text-white', 'animate-pulse');
-                        btn.classList.add('bg-slate-800', 'text-slate-400');
+                        btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
+                        btn.classList.add('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
                     }
                 }, 5000);
                 return;
@@ -156,8 +159,8 @@
                 await Promise.all(deletions);
                 isConfirming = false;
                 btn.innerText = "Vynulovat data";
-                btn.classList.remove('bg-red-600', 'text-white', 'animate-pulse');
-                btn.classList.add('bg-slate-800', 'text-slate-400');
+                btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
+                btn.classList.add('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
             } catch (e) { console.error(e); }
         };
 
