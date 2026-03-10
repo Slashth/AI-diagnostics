@@ -1,112 +1,295 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagnostika adopce AI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import React, { useState, useEffect } from 'react';
+import { initializeApp } from "firebase/app";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { 
+  Zap, 
+  ArrowRight, 
+  Target, 
+  CheckCircle2, 
+  Trophy, 
+  BarChart3,
+  Lightbulb,
+  RotateCcw,
+  BookOpen,
+  MousePointer2,
+  MessageSquareQuote,
+  ShieldCheck,
+  Users2
+} from 'lucide-react';
 
-        // --- KONFIGURACE ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyBmy6Wg2hgML35nbBqavkDDDV1aIZTCqsU",
-            authDomain: "ai-diagnostika.firebaseapp.com",
-            projectId: "ai-diagnostika",
-            storageBucket: "ai-diagnostika.firebasestorage.app",
-            messagingSenderId: "965470292600",
-            appId: "1:965470292600:web:28ba845829a3c849773b8d"
-        };
+const firebaseConfig = {
+    apiKey: "AIzaSyBmy6Wg2hgML35nbBqavkDDDV1aIZTCqsU",
+    authDomain: "ai-diagnostika.firebaseapp.com",
+    projectId: "ai-diagnostika",
+    storageBucket: "ai-diagnostika.firebasestorage.app",
+    messagingSenderId: "965470292600",
+    appId: "1:965470292600:web:28ba845829a3c849773b8d"
+};
 
-        // --- IDENTITY NASTAVENÍ ---
-        // Toto jméno složky musí přesně odpovídat jménu v Security Rules na Firebase
-        const appId = 'ai-diagnostika-2024'; 
+const internalAppId = 'ai-diagnostika-2024';
 
+const categoryConfig = {
+    "Nástroje a rutiny": {
+        color: "blue",
+        icon: MousePointer2,
+        desc: "První blok se zaměřuje na vaše denní návyky a šíři nástrojů, které reálně používáte."
+    },
+    "Prompt Engineering": {
+        color: "purple",
+        icon: MessageSquareQuote,
+        desc: "Nyní se podíváme na technickou zdatnost – jak přesně s modely komunikujete."
+    },
+    "Strategie a bezpečnost": {
+        color: "emerald",
+        icon: ShieldCheck,
+        desc: "Tato část prověří váš kritický odstup, práci s daty a strategické delegování."
+    },
+    "Tým a budoucnost": {
+        color: "amber",
+        icon: Users2,
+        desc: "Závěrečný blok zkoumá, jak AI mění vaši spolupráci s ostatními a vizi vaší role."
+    }
+};
+
+const questions = [
+    { cat: "Nástroje a rutiny", text: "Jak často využíváte AI pro řešení pracovních úkolů?", options: [{text:"Téměř vůbec",p:0},{text:"Párkrát za měsíc",p:1},{text:"Denně pro vybrané úkoly",p:2},{text:"Mnohokrát denně, je to můj hlavní pracovní prostor",p:3}]},
+    { cat: "Nástroje a rutiny", text: "Kolik různých AI modelů/nástrojů aktivně ovládáte (text, obraz, data)?", options: [{text:"Žádný",p:0},{text:"Používám jen jeden bezplatný nástroj",p:1},{text:"Mám 1-2 placené/profesionální nástroje",p:2},{text:"Využívám široké portfolio specializovaných modelů",p:3}]},
+    { cat: "Nástroje a rutiny", text: "Jak přemýšlíte o možnostech AI pro úkoly, které zatím děláte ručně?", options: [{text:"Nepřemýšlím o tom",p:0},{text:"Napadne mě to jen u velmi složitých věcí",p:1},{text:"U každého nového úkolu zvažuji asistenci AI",p:2},{text:"Mám seznam procesů, které s AI systematicky automatizuji",p:3}]},
+    { cat: "Nástroje a rutiny", text: "Sledujete novinky a trendy v oblasti AI ve vašem oboru?", options: [{text:"Vůbec",p:0},{text:"Když na mě něco náhodně vyskočí",p:1},{text:"Cíleně jednou měsíčně",p:2},{text:"Týdně testuji novinky a funkce",p:3}]},
+    
+    { cat: "Prompt Engineering", text: "Jak vypadá vaše typické zadání pro AI?", options: [{text:"Jedna krátká věta",p:0},{text:"Instrukce bez širšího kontextu",p:1},{text:"Strukturované zadání s kontextem a cílem",p:2},{text:"Pokročilé rámce (Persona, Kontext, Omezení, Formát)",p:3}]},
+    { cat: "Prompt Engineering", text: "Jak pracujete s výstupem, který není napoprvé ideální?", options: [{text:"Končím, AI se netrefila",p:0},{text:"Zkusím zadat úplně jiný dotaz",p:1},{text:"Iteruji (ladím odpověď dalšími dotazy)",p:2},{text:"Vedeme hluboký dialog k dosažení precizního výsledku",p:3}]},
+    { cat: "Prompt Engineering", text: "Využíváte techniku dávání příkladů (Few-shot) dříve, než AI začne tvořit?", options: [{text:"Nevím, co to je",p:0},{text:"Slyšel/a jsem o tom, ale nepoužívám",p:1},{text:"Občas u složitějších formátů",p:2},{text:"Pravidelně pro udržení konzistence výstupů",p:3}]},
+    { cat: "Prompt Engineering", text: "Používáte Custom Instructions nebo vlastní GPT agenty?", options: [{text:"Ne",p:0},{text:"Vím o tom, ale nemám nastaveno",p:1},{text:"Mám základní nastavení své role",p:2},{text:"Mám knihovnu agentů pro různé pracovní agendy",p:3}]},
+
+    { cat: "Strategie a bezpečnost", text: "Jak vnímáte AI ve svém tvůrčím a plánovacím procesu?", options: [{text:"Jako hrozbu",p:0},{text:"Jako lepší vyhledávač",p:1},{text:"Jako asistenta pro rutinu",p:2},{text:"Jako sparing partnera a mentálního oponenta",p:3}]},
+    { cat: "Strategie a bezpečnost", text: "Dokážete identifikovat úkoly, kde AI nesmí být použita (etika, empatie, vize)?", options: [{text:"Používám ji na všechno",p:0},{text:"Nějak intuitivně to cítím",p:1},{text:"Mám pro sebe jasně definované hranice",p:2},{text:"Mám nastavený etický rámec pro sebe i tým",p:3}]},
+    { cat: "Strategie a bezpečnost", text: "Jak postupujete při ověřování faktických chyb (halucinací) AI?", options: [{text:"Věřím, že AI má pravdu",p:0},{text:"Zkontroluji jen to, co bije do očí",p:1},{text:"Všechny důležité údaje ověřuji externě",p:2},{text:"Validace je pevnou a procesní součástí mého workflow",p:3}]},
+    { cat: "Strategie a bezpečnost", text: "Jak řešíte citlivá firemní data při práci s AI?", options: [{text:"Vkládám tam vše",p:0},{text:"Snažím se být opatrný/á",p:1},{text:"Důsledně anonymizuji data i jména",p:2},{text:"Využívám zabezpečené prostředí a rozumím politice soukromí",p:3}]},
+
+    { cat: "Tým a budoucnost", text: "Sdílíte své osvědčené postupy a prompty s kolegy?", options: [{text:"Ne",p:0},{text:"Občas někomu něco pošlu",p:1},{text:"Máme společný komunikační kanál/dokument",p:2},{text:"Máme sdílenou firemní knihovnu instrukcí",p:3}]},
+    { cat: "Tým a budoucnost", text: "Pomáháte ostatním v týmu s adopcí AI?", options: [{text:"Ne",p:0},{text:"Když se mě někdo zeptá",p:1},{text:"Aktivně ukazuji tipy při spolupráci",p:2},{text:"Jsem interní mentor a evangelista",p:3}]},
+    { cat: "Tým a budoucnost", text: "Jak moc věříte, že vaše role bude za 2 roky vypadat stejně?", options: [{text:"Naprosto",p:0},{text:"Změní se jen detaily",p:1},{text:"Bude vypadat z 50 % jinak",p:2},{text:"Bude to úplně jiná profese řízená technologií",p:3}]},
+    { cat: "Tým a budoucnost", text: "Jak AI ovlivnila váš pocit produktivity a 'páky' v práci?", options: [{text:"Nijak",p:0},{text:"Dělám úkoly o něco rychleji",p:1},{text:"Díky AI dělám věci, které bych dřív vůbec nestíhal/a",p:2},{text:"Můj přínos se posunul od exekutivy ke strategickému řízení",p:3}]}
+];
+
+const levels = [
+    { min: 0, max: 8, key: 'A', name: "L0: Pozorovatel na startu", desc: "AI zatím vnímáte jako vzdálený trend nebo hrozbu. Jste v bezpečné zóně tradice, ale okolí se začíná zrychlovat bez vás. Chybí vám praktická zkušenost, která by odbourala zbytečný respekt.", nextLevelDiff: "Hlavním rozdílem mezi vámi a L1 je překonání 'strachu z bílé stránky'. L1 se už nebojí AI zeptat na hloupost.", actionSteps: ["Nainstalujte si mobilní aplikaci ChatGPT a vyzkoušejte hlasový režim při vaření.", "Požádejte AI o naplánování 3denního výletu do místa, které neznáte.", "Nechte si vysvětlit princip fungování AI jako pro pětileté dítě."] },
+    { min: 9, max: 18, key: 'B', name: "L1: Experimentátor (Ad-hoc)", desc: "Víte, že AI funguje, ale používáte ji spíše jako hračku nebo 'lepší Google'. Vaše výsledky jsou nahodilé a často vás odradí, když se AI netrefí napoprvé.", nextLevelDiff: "L2 se od vás liší tím, že už nehledá náhodné odpovědi, ale začíná AI vědomě zapojovat do svého denního kalendáře.", actionSteps: ["Vyberte si jeden rutinní e-mail a slibte si, že ho už nikdy nenapíšete bez AI.", "Zkuste metodu vložení kontextu: Než položíte otázku, napište AI, kdo jste.", "Naučte se jeden jednoduchý rámec zadání: Role - Kontext - Úkol."] },
+    { min: 19, max: 29, key: 'C', name: "L2: Pokročilý uživatel (Utility)", desc: "Máte silnou intuici a AI používáte denně. Rozumíte promptování, ale stále pracujete na úrovni 'zadání úkolu'. Chybí vám systémová delegace.", nextLevelDiff: "L3 se liší strategickým nadhledem. Neřeší jen 'jak to napsat', ale 'zda a proč to delegovat'.", actionSteps: ["Vytvořte si vlastní 'Custom Instructions' v nastavení AI.", "Začněte používat AI jako oponenta pro své hotové nápady.", "Proveďte si audit týdne: Které 3 hodiny exekutivy můžete přeměnit na strategii?"] },
+    { min: 30, max: 40, key: 'D', name: "L3: Strategický lídr (Leverage)", desc: "AI je vaše křídlo. Rozumíte pákám, bezpečnosti i transformaci. Neřešíte exekutivu, ale zadáváte vize.", nextLevelDiff: "Rozdíl oproti L4 je v integraci. L4 už nepoužívá AI jako nástroj bokem, ale jako neviditelnou součást všech procesů.", actionSteps: ["Vytvořte pro svůj tým sdílenou knihovnu 'Master Promptů'.", "Začněte experimentovat s vlastním GPT agentem se znalostní bází.", "Zaměřte se na etiku a hlídejte si 'lidskou esenci' ve své značce."] },
+    { min: 41, max: 48, key: 'E', name: "L4: AI Integrátor & Maestro", desc: "AI je pro vás organickou součástí myšlení. Neřešíte úkoly, ale transformujete systémy. Vaše přidaná hodnota je v kurátorství vizí.", nextLevelDiff: "Vaším dalším krokem je mentoring celého trhu a budování systémů s vysokou mírou autonomie.", actionSteps: ["Zkuste propojit AI s vašimi daty přes API nebo platformy jako Make.", "Staňte se mentorem v týmu – nejvíce se naučíte tím, že budete učit ostatní.", "Hledejte cesty k 'Human-Centric AI' – využijte čas k empatii a inovacím."] }
+];
+
+export default function App() {
+    const [screen, setScreen] = useState('intro');
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const [totalPoints, setTotalPoints] = useState(0);
+    const [user, setUser] = useState(null);
+    const [result, setResult] = useState(null);
+
+    useEffect(() => {
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        signInAnonymously(auth).catch(e => console.error(e));
+        return onAuthStateChanged(auth, setUser);
+    }, []);
+
+    const startQuiz = () => setScreen('category_intro');
+
+    const handleAnswer = (points) => {
+        const newPoints = totalPoints + points;
+        const nextIdx = currentIdx + 1;
         
-        let currentUser = null;
+        if (nextIdx < questions.length) {
+            setTotalPoints(newPoints);
+            setCurrentIdx(nextIdx);
+            // Pokud další otázka patří do jiné kategorie, zobrazíme předděl
+            if (questions[nextIdx].cat !== questions[currentIdx].cat) {
+                setScreen('category_intro');
+            }
+        } else {
+            finishQuiz(newPoints);
+        }
+    };
 
-        onAuthStateChanged(auth, (user) => { if (user) currentUser = user; });
-        signInAnonymously(auth).catch(e => console.error("Auth error", e));
+    const finishQuiz = async (finalPoints) => {
+        const res = levels.find(l => finalPoints >= l.min && finalPoints <= l.max) || levels[0];
+        setResult(res);
+        setTotalPoints(finalPoints);
+        setScreen('result');
 
-        window.saveResult = async (key, name) => {
-            if (!currentUser) return;
+        if (user) {
             try {
-                // RULE 1: Striktní cesta
-                const ref = doc(db, 'artifacts', appId, 'public', 'data', 'responses', currentUser.uid);
-                await setDoc(ref, { 
-                    levelKey: key, 
-                    levelName: name, 
-                    ts: new Date().toISOString(),
-                    uid: currentUser.uid 
+                const db = getFirestore();
+                await setDoc(doc(db, 'artifacts', internalAppId, 'public', 'data', 'responses', user.uid), {
+                    uid: user.uid,
+                    levelKey: res.key,
+                    levelName: res.name,
+                    points: finalPoints,
+                    ts: new Date().toISOString()
                 });
-            } catch (e) { console.error("Save error", e); }
-        };
-
-        // Zbytek UI logiky zůstává stejný...
-        window.startQuiz = () => {
-            document.getElementById('intro-screen').classList.add('hidden');
-            document.getElementById('quiz-screen').classList.remove('hidden');
-            renderQuestion();
-        };
-
-        const questions = [
-            { text: "Jak hluboko je AI zapojena do vaší práce?", options: [
-                { text: "L0: Vůbec.", score: 'A' }, { text: "L1: Pasivně.", score: 'B' }, { text: "L2: Experimentálně.", score: 'C' }, { text: "L3: Systematicky.", score: 'D' }
-            ]}
-        ];
-
-        let currentIdx = 0;
-        let answers = [];
-
-        function renderQuestion() {
-            const q = questions[currentIdx];
-            document.getElementById('q-title').innerText = q.text;
-            const container = document.getElementById('q-options');
-            container.innerHTML = '';
-            q.options.forEach(opt => {
-                const b = document.createElement('div');
-                b.className = "p-4 border-2 border-slate-100 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all text-sm";
-                b.innerText = opt.text;
-                b.onclick = () => {
-                    answers.push(opt.score);
-                    if (currentIdx < questions.length - 1) {
-                        currentIdx++; renderQuestion();
-                    } else {
-                        finish();
-                    }
-                };
-                container.appendChild(b);
-            });
+            } catch (e) { console.error(e); }
         }
+    };
 
-        async function finish() {
-            const finalKey = answers[answers.length - 1];
-            await window.saveResult(finalKey, "Úroveň " + finalKey);
-            document.getElementById('quiz-screen').classList.add('hidden');
-            document.getElementById('result-screen').classList.remove('hidden');
-            document.getElementById('res-name').innerText = "Úroveň " + finalKey;
-        }
-    </script>
-</head>
-<body class="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-    <div class="max-w-md w-full bg-white shadow-2xl rounded-[2.5rem] p-8">
-        <div id="intro-screen" class="text-center">
-            <h1 class="text-2xl font-black mb-4">AI Diagnostika</h1>
-            <button onclick="startQuiz()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold">Spustit</button>
+    const currentCat = questions[currentIdx].cat;
+    const catInfo = categoryConfig[currentCat];
+    const CatIcon = catInfo.icon;
+    const colorClass = catInfo.color;
+
+    if (screen === 'intro') return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans text-slate-900">
+            <div className="max-w-md w-full bg-white shadow-2xl rounded-[2.5rem] p-10 text-center border border-slate-100">
+                <div className="w-20 h-20 bg-blue-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-blue-200">
+                    <Zap size={40} strokeWidth={2.5} />
+                </div>
+                <h1 className="text-3xl font-extrabold mb-4 tracking-tight">AI Maturity Index</h1>
+                <p className="text-slate-500 mb-10 leading-relaxed text-sm">
+                    Hloubková diagnostika adopce AI napříč 4 dimenzemi. <br />
+                    <strong>16 otázek • Osobní plán rozvoje</strong>
+                </p>
+                <button 
+                    onClick={startQuiz}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2 group"
+                >
+                    Zahájit analýzu
+                    <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                </button>
+            </div>
         </div>
-        <div id="quiz-screen" class="hidden">
-            <h2 id="q-title" class="text-lg font-bold mb-6"></h2>
-            <div id="q-options" class="space-y-3"></div>
+    );
+
+    if (screen === 'category_intro') return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+            <div className="max-w-md w-full bg-white shadow-2xl rounded-[2.5rem] p-10 text-center border border-slate-100 animate-in fade-in zoom-in duration-500">
+                <div className={`w-20 h-20 bg-${colorClass}-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl`}>
+                    <CatIcon size={40} />
+                </div>
+                <h3 className={`text-${colorClass}-600 font-black uppercase text-[10px] tracking-[0.3em] mb-4`}>Další oblast</h3>
+                <h2 className="text-2xl font-black mb-4 text-slate-900">{currentCat}</h2>
+                <p className="text-slate-500 mb-10 text-sm leading-relaxed">
+                    {catInfo.desc}
+                </p>
+                <button 
+                    onClick={() => setScreen('quiz')}
+                    className={`w-full bg-${colorClass}-600 hover:bg-${colorClass}-700 text-white py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2`}
+                >
+                    Pokračovat
+                    <ArrowRight size={18} />
+                </button>
+            </div>
         </div>
-        <div id="result-screen" class="hidden text-center">
-            <h2 id="res-name" class="text-3xl font-black text-blue-600 mb-2"></h2>
-            <p class="text-slate-500 text-sm">Odesláno na dashboard.</p>
+    );
+
+    if (screen === 'quiz') return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans text-slate-900">
+            <div className="max-w-md w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col">
+                <div className="h-1.5 w-full bg-slate-100">
+                    <div 
+                        className={`h-full bg-${colorClass}-600 transition-all duration-500 ease-out`} 
+                        style={{ width: `${(currentIdx / questions.length) * 100}%` }}
+                    />
+                </div>
+                <div className="p-8">
+                    <div className="flex justify-between items-center mb-8">
+                        <span className={`text-[10px] font-black uppercase tracking-widest text-${colorClass}-600 bg-${colorClass}-50 px-3 py-1 rounded-full`}>
+                            {currentCat}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400">
+                            {currentIdx + 1} / {questions.length}
+                        </span>
+                    </div>
+                    <h2 className="text-xl font-bold mb-8 text-slate-800 leading-tight min-h-[4rem]">
+                        {questions[currentIdx].text}
+                    </h2>
+                    <div className="space-y-3">
+                        {questions[currentIdx].options.map((opt, i) => (
+                            <div 
+                                key={i}
+                                onClick={() => handleAnswer(opt.p)}
+                                className={`p-4 border-2 border-slate-100 rounded-2xl cursor-pointer hover:border-${colorClass}-500 hover:bg-${colorClass}-50 transition-all text-slate-600 font-medium text-sm flex items-center gap-3 group`}
+                            >
+                                <div className={`w-4 h-4 rounded-full border-2 border-slate-200 group-hover:border-${colorClass}-400 transition-colors`} />
+                                {opt.text}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</body>
-</html>
+    );
+
+    return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans text-slate-900 overflow-y-auto py-12">
+            <div className="max-w-xl w-full bg-white shadow-2xl rounded-[3rem] p-10 border border-slate-100">
+                <div className="text-center mb-10">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-50 text-blue-600 rounded-full mb-4">
+                        <Trophy size={32} />
+                    </div>
+                    <p className="text-blue-600 font-bold uppercase text-[10px] tracking-[0.25em] mb-2">Vaše výsledná úroveň</p>
+                    <h2 className="text-3xl font-black text-slate-900 leading-tight">{result.name}</h2>
+                    <div className="mt-4 inline-block bg-slate-100 text-slate-500 px-4 py-1.5 rounded-full text-xs font-bold">
+                        Skóre: {totalPoints} / 48 bodů
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 text-slate-100 group-hover:text-slate-200 transition-colors">
+                            <BarChart3 size={60} />
+                        </div>
+                        <h4 className="text-xs font-black text-slate-400 uppercase mb-3 tracking-widest flex items-center gap-2">
+                            <Target size={14} /> Kde se nacházíte
+                        </h4>
+                        <p className="text-sm text-slate-600 leading-relaxed relative z-10 font-medium italic">
+                            {result.desc}
+                        </p>
+                    </div>
+
+                    <div className="bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100/50">
+                        <h4 className="text-xs font-black text-indigo-400 uppercase mb-3 tracking-widest flex items-center gap-2">
+                            <ArrowRight size={14} /> Cesta k další úrovni
+                        </h4>
+                        <p className="text-sm text-indigo-900/70 leading-relaxed">
+                            {result.nextLevelDiff}
+                        </p>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-[2rem] border-2 border-blue-50 shadow-sm">
+                        <h4 className="text-xs font-black text-blue-400 uppercase mb-5 tracking-widest flex items-center gap-2">
+                            <Lightbulb size={14} /> Checklist pro váš rozvoj
+                        </h4>
+                        <ul className="space-y-4">
+                            {result.actionSteps.map((step, i) => (
+                                <li key={i} className="flex gap-4 items-start group">
+                                    <div className="mt-0.5 text-blue-500 bg-blue-100/50 p-1 rounded-lg group-hover:bg-blue-500 group-hover:text-white transition-all">
+                                        <CheckCircle2 size={16} />
+                                    </div>
+                                    <span className="text-sm text-slate-700 font-medium leading-snug">
+                                        {step}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+
+                <div className="mt-12 pt-8 border-t border-slate-50 text-center">
+                    <div className="flex flex-col gap-4 items-center">
+                        <p className="text-slate-400 text-[9px] uppercase tracking-widest flex items-center gap-2">
+                            <RotateCcw size={10} /> Data synchronizována s dashboardem lektora
+                        </p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="text-blue-600 hover:text-blue-700 font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
+                        >
+                            <BookOpen size={14} /> Zkusit znovu
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
