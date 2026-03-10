@@ -27,13 +27,17 @@
             </div>
             
             <div class="flex items-center gap-4">
-                <!-- Sjednocená velikost tlačítek pomocí px-6 py-3 a min-w -->
-                <button id="reset-btn" onclick="handleReset()" class="min-w-[160px] bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] uppercase font-bold tracking-widest px-6 py-3 rounded-xl transition-all border border-white/5">
-                    Vynulovat data
+                <!-- Sjednocená fixní tlačítka s ikonami a tlumenou barvou -->
+                <button id="reset-btn" onclick="handleReset()" class="w-48 h-11 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all border border-white/5">
+                    <i data-lucide="trash-2" size="14"></i>
+                    <span id="reset-text">Vynulovat data</span>
                 </button>
-                <button id="export-csv-btn" class="min-w-[160px] bg-blue-600 hover:bg-blue-700 text-white text-[10px] uppercase font-bold tracking-widest px-6 py-3 rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2">
-                    <i data-lucide="file-spreadsheet" size="14"></i> Exportovat CSV
+                
+                <button id="export-csv-btn" class="w-48 h-11 flex items-center justify-center gap-2 bg-slate-800 hover:bg-blue-600 text-slate-400 hover:text-white text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all border border-white/5 shadow-lg">
+                    <i data-lucide="file-spreadsheet" size="14"></i>
+                    <span>Exportovat CSV</span>
                 </button>
+
                 <div class="text-right border-l border-white/10 pl-6">
                     <div id="total-count" class="text-5xl font-black text-white leading-none">0</div>
                     <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Účastníků</div>
@@ -66,7 +70,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- KONFIGURACE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyBmy6Wg2hgML35nbBqavkDDDV1aIZTCqsU",
             authDomain: "ai-diagnostika.firebaseapp.com",
@@ -93,7 +96,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- CHART INIT ---
         function initChart() {
             const ctx = document.getElementById('mainChart').getContext('2d');
             chart = new Chart(ctx, {
@@ -130,20 +132,20 @@
             });
         }
 
-        // --- RESET LOGIKA ---
         window.handleReset = async () => {
             const btn = document.getElementById('reset-btn');
+            const txt = document.getElementById('reset-text');
+            
             if (!isConfirming) {
                 isConfirming = true;
-                btn.innerText = "Opravdu smazat vše?";
-                // Přidání červené barvy a hover efektu
+                txt.innerText = "Smazat vše?";
                 btn.classList.remove('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
                 btn.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
                 
                 setTimeout(() => {
                     if (isConfirming) {
                         isConfirming = false;
-                        btn.innerText = "Vynulovat data";
+                        txt.innerText = "Vynulovat data";
                         btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
                         btn.classList.add('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
                     }
@@ -152,30 +154,24 @@
             }
 
             try {
-                btn.innerText = "Mažu...";
+                txt.innerText = "Mažu...";
                 const colRef = collection(db, 'artifacts', internalAppId, 'public', 'data', 'responses');
                 const snap = await getDocs(colRef);
                 const deletions = snap.docs.map(d => deleteDoc(doc(db, 'artifacts', internalAppId, 'public', 'data', 'responses', d.id)));
                 await Promise.all(deletions);
                 isConfirming = false;
-                btn.innerText = "Vynulovat data";
+                txt.innerText = "Vynulovat data";
                 btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
                 btn.classList.add('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
             } catch (e) { console.error(e); }
         };
 
-        // --- CSV EXPORT ---
         document.getElementById('export-csv-btn').onclick = () => {
             if (lastData.length === 0) return;
-            
-            // Header
             let csv = "UID;LevelKey;LevelName;Points;WeakestArea;Timestamp\n";
-            
-            // Rows
             lastData.forEach(row => {
                 csv += `${row.uid || ''};${row.levelKey || ''};${row.levelName || ''};${row.points || 0};${row.weakestArea || ''};${row.ts || ''}\n`;
             });
-
             const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
@@ -187,7 +183,6 @@
             document.body.removeChild(link);
         };
 
-        // --- DATA LOGIKA ---
         async function connect() {
             await signInAnonymously(auth);
             const colRef = collection(db, 'artifacts', internalAppId, 'public', 'data', 'responses');
