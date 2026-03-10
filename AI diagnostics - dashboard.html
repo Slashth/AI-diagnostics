@@ -28,7 +28,7 @@
             </div>
             
             <div class="flex items-center gap-4 flex-wrap sm:flex-nowrap">
-                <!-- Tlačítko pro přepínání týmového režimu -->
+                <!-- Toggles & Actions -->
                 <button id="toggle-teams-btn" onclick="toggleTeams()" class="w-48 h-11 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all border border-white/5">
                     <i data-lucide="users" size="14"></i>
                     <span id="teams-btn-text">Týmový režim</span>
@@ -78,7 +78,7 @@
                 </div>
                 
                 <div id="teams-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div class="col-span-full py-12 text-center border-2 border-dashed border-white/5 rounded-[2rem]">
+                    <div id="teams-placeholder" class="col-span-full py-12 text-center border-2 border-dashed border-white/5 rounded-[2rem]">
                         <p class="text-slate-500 text-sm italic">Zadejte počet skupin a klikněte na tlačítko výše.</p>
                     </div>
                 </div>
@@ -99,6 +99,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // --- KONFIGURACE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyBmy6Wg2hgML35nbBqavkDDDV1aIZTCqsU",
             authDomain: "ai-diagnostika.firebaseapp.com",
@@ -120,5 +121,174 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // --- CHART INIT ---
         function initChart() {
-            const ctx =
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['L0: Pozorovatel', 'L1: Experimentátor', 'L2: Pokročilý', 'L3: Stratég', 'L4: Integrátor'],
+                    datasets: [{ label: 'Účastníci', data: [0, 0, 0, 0, 0], backgroundColor: '#3b82f6', borderRadius: 12, maxBarThickness: 60 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // --- TOGGLE TÝMŮ ---
+        window.toggleTeams = () => {
+            const section = document.getElementById('teams-section');
+            const btn = document.getElementById('toggle-teams-btn');
+            teamsVisible = !teamsVisible;
+            
+            if (teamsVisible) {
+                section.classList.remove('hidden');
+                btn.classList.remove('bg-slate-800', 'text-slate-400');
+                btn.classList.add('bg-blue-600', 'text-white');
+            } else {
+                section.classList.add('hidden');
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-slate-800', 'text-slate-400');
+            }
+            lucide.createIcons();
+        };
+
+        // --- RESET LOGIKA ---
+        window.handleReset = async () => {
+            const txt = document.getElementById('reset-text');
+            const btn = document.getElementById('reset-btn');
+            if (!isConfirming) {
+                isConfirming = true;
+                txt.innerText = "Smazat vše?";
+                btn.classList.remove('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
+                btn.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
+                setTimeout(() => { 
+                    if (isConfirming) { 
+                        isConfirming = false; 
+                        txt.innerText = "Vynulovat data"; 
+                        btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse'); 
+                        btn.classList.add('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
+                        lucide.createIcons();
+                    } 
+                }, 5000);
+                return;
+            }
+            try {
+                txt.innerText = "Mažu...";
+                const colRef = collection(db, 'artifacts', internalAppId, 'public', 'data', 'responses');
+                const snap = await getDocs(colRef);
+                const deletions = snap.docs.map(d => deleteDoc(doc(db, 'artifacts', internalAppId, 'public', 'data', 'responses', d.id)));
+                await Promise.all(deletions);
+                isConfirming = false;
+                txt.innerText = "Vynulovat data";
+                btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
+                btn.classList.add('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
+                lucide.createIcons();
+            } catch (e) { console.error(e); }
+        };
+
+        // --- GENERÁTOR TÝMŮ ---
+        window.generateTeams = () => {
+            if (lastData.length === 0) return;
+            const teamCount = Math.max(1, parseInt(document.getElementById('team-count').value) || 1);
+            const grid = document.getElementById('teams-grid');
+            grid.innerHTML = '';
+
+            const sorted = [...lastData].sort((a, b) => b.levelKey.localeCompare(a.levelKey));
+            const teams = Array.from({ length: teamCount }, () => []);
+
+            sorted.forEach((person, i) => {
+                const row = Math.floor(i / teamCount);
+                let teamIdx;
+                if (row % 2 === 0) { teamIdx = i % teamCount; } 
+                else { teamIdx = (teamCount - 1) - (i % teamCount); }
+                teams[teamIdx].push(person);
+            });
+
+            teams.forEach((members, i) => {
+                if (members.length === 0) return;
+                const teamBox = document.createElement('div');
+                teamBox.className = "team-card p-6 rounded-[2rem] flex flex-col transition-all hover:border-blue-500/30 shadow-lg";
+                teamBox.innerHTML = `
+                    <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-3">
+                        <span class="text-blue-500 font-black uppercase text-[10px] tracking-widest">Tým ${i + 1}</span>
+                        <span class="text-slate-600 text-[9px] font-bold uppercase tracking-widest">${members.length} čl.</span>
+                    </div>
+                    <ul class="space-y-3">
+                        ${members.map(m => `
+                            <li class="flex justify-between items-center group">
+                                <span class="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">${m.alias || 'Anonymní'}</span>
+                                <span class="text-[9px] font-black bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-white/5 uppercase">${levelNames[m.levelKey] || 'N/A'}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+                grid.appendChild(teamBox);
+            });
+            lucide.createIcons();
+        };
+
+        // --- CSV EXPORT ---
+        document.getElementById('export-csv-btn').onclick = () => {
+            if (lastData.length === 0) return;
+            let csv = "UID;Alias;LevelKey;LevelName;Points;WeakestArea;Timestamp\n";
+            lastData.forEach(row => { csv += `${row.uid || ''};${row.alias || ''};${row.levelKey || ''};${row.levelName || ''};${row.points || 0};${row.weakestArea || ''};${row.ts || ''}\n`; });
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.setAttribute("href", URL.createObjectURL(blob));
+            link.setAttribute("download", `AI_Maturity_Data_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // --- LIVE DATA ---
+        async function connect() {
+            await signInAnonymously(auth);
+            const colRef = collection(db, 'artifacts', internalAppId, 'public', 'data', 'responses');
+            onSnapshot(colRef, (snap) => {
+                const data = snap.docs.map(d => d.data());
+                lastData = data;
+                updateUI(data);
+            });
+        }
+
+        function updateUI(data) {
+            const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+            data.forEach(d => { if(counts[d.levelKey] !== undefined) counts[d.levelKey]++; });
+            
+            document.getElementById('total-count').innerText = data.length;
+            
+            if (chart) { 
+                chart.data.datasets[0].data = [counts.A, counts.B, counts.C, counts.D, counts.E]; 
+                chart.update(); 
+            }
+
+            // Automatické smazání týmů z UI, pokud jsou data smazána
+            if (data.length === 0) {
+                const grid = document.getElementById('teams-grid');
+                if (grid) {
+                    grid.innerHTML = `
+                        <div class="col-span-full py-12 text-center border-2 border-dashed border-white/5 rounded-[2rem]">
+                            <p class="text-slate-500 text-sm italic">Zadejte počet skupin a klikněte na tlačítko výše.</p>
+                        </div>
+                    `;
+                }
+            }
+            lucide.createIcons();
+        }
+
+        window.onload = () => { 
+            initChart(); 
+            lucide.createIcons(); 
+            connect(); 
+        };
+    </script>
+</body>
+</html>
