@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Dashboard - AI Workshop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- KONFIGURACE FIREBASE ---
+        // Zde musíte vložit své skutečné údaje z Firebase konzole (Project Settings -> Web App)
+        const firebaseConfig = {
+             	apiKey: "AIzaSyAisJ0c4BYFrluT9jOygsEY8yNz4hmJWBo",
+  		authDomain: "ai-diagnostika.firebaseapp.com",
+ 		projectId: "ai-diagnostika",
+  		storageBucket: "ai-diagnostika.firebasestorage.app",
+  		messagingSenderId: "965470292600",
+  		appId: "1:965470292600:web:28ba845829a3c849773b8d"
+
+        };
+
+        let chart;
+
+        // Funkce pro inicializaci grafu
+        function initChart() {
+            const ctx = document.getElementById('chart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['L0', 'L1', 'L2', 'L3', 'L4+'],
+                    datasets: [{ 
+                        label: 'Počet účastníků', 
+                        data: [0, 0, 0, 0, 0], 
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 8
+                    }]
+                },
+                options: { 
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1, color: '#94a3b8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        window.onload = async () => {
+            initChart();
+
+            // Kontrola, zda uživatel již vložil své API klíče
+            if (firebaseConfig.apiKey === "VAŠE_API_KEY") {
+                const statusEl = document.getElementById('status-message');
+                statusEl.innerHTML = `
+                    <div class="bg-amber-500/20 border border-amber-500 p-4 rounded-xl text-amber-200 text-sm">
+                        <strong>Chybí konfigurace:</strong> V souboru je stále výchozí text "VAŠE_API_KEY". 
+                        Prosím, vložte své údaje z Firebase konzole do objektu <code>firebaseConfig</code>.
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+
+                // Autentizace před zahájením poslechu dat
+                await signInAnonymously(auth);
+                
+                // Real-time poslech změn v kolekci "responses"
+                onSnapshot(collection(db, "responses"), (snap) => {
+                    const data = snap.docs.map(d => d.data());
+                    document.getElementById('count').innerText = data.length;
+                    
+                    const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+                    data.forEach(d => { 
+                        if(counts[d.levelKey] !== undefined) counts[d.levelKey]++; 
+                    });
+                    
+                    if (chart) {
+                        chart.data.datasets[0].data = [counts.A, counts.B, counts.C, counts.D, counts.E];
+                        chart.update();
+                    }
+                }, (error) => {
+                    console.error("Firestore Error:", error);
+                    document.getElementById('status-message').innerHTML = `
+                        <div class="bg-red-500/20 border border-red-500 p-4 rounded-xl text-red-200 text-sm">
+                            <strong>Chyba databáze:</strong> Zkontrolujte, zda máte ve Firebase zapnutý Firestore 
+                            a nastavená pravidla (Rules) pro čtení.
+                        </div>
+                    `;
+                });
+
+            } catch (error) {
+                console.error("Initialization Error:", error);
+                document.getElementById('status-message').innerHTML = `
+                    <div class="bg-red-500/20 border border-red-500 p-4 rounded-xl text-red-200 text-sm">
+                        <strong>Chyba inicializace:</strong> API klíč nebo ID projektu není platné.
+                    </div>
+                `;
+            }
+        };
+    </script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen p-8 font-sans">
+    <div class="max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-12">
+            <div>
+                <h1 class="text-3xl font-black text-blue-500">Live AI Adopce</h1>
+                <p class="text-slate-400 text-sm mt-1 uppercase tracking-widest font-bold">Lektorský Dashboard</p>
+            </div>
+            <div class="text-right">
+                <div id="count" class="text-5xl font-black text-white">0</div>
+                <div class="text-xs text-slate-500 uppercase font-bold tracking-widest">Účastníků</div>
+            </div>
+        </header>
+
+        <!-- Místo pro stavové zprávy a chyby -->
+        <div id="status-message" class="mb-8"></div>
+
+        <div class="bg-slate-800 p-10 rounded-[2.5rem] shadow-2xl border border-white/5">
+            <h3 class="text-slate-500 text-xs font-bold uppercase mb-8 tracking-[0.2em] text-center">Aktuální rozložení sil v týmu</h3>
+            <div class="relative h-[400px]">
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+
+        <footer class="mt-12 text-center">
+            <p class="text-slate-600 text-[10px] uppercase tracking-widest font-medium">Data jsou synchronizována v reálném čase přes Firebase Firestore</p>
+        </footer>
+    </div>
+</body>
+</html>

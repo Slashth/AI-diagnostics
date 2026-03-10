@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Diagnostika - Workshop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- SEM VLOŽTE SVOU KONFIGURACI Z FIREBASE KONZOLE ---
+        const firebaseConfig = {
+             apiKey: "AIzaSyAisJ0c4BYFrluT9jOygsEY8yNz4hmJWBo",
+  authDomain: "ai-diagnostika.firebaseapp.com",
+  projectId: "ai-diagnostika",
+  storageBucket: "ai-diagnostika.firebasestorage.app",
+  messagingSenderId: "965470292600",
+  appId: "1:965470292600:web:28ba845829a3c849773b8d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let currentUser = null;
+
+        // Autentizace
+        signInAnonymously(auth).catch(e => console.error("Auth error", e));
+        onAuthStateChanged(auth, (user) => { if (user) currentUser = user; });
+
+        // Otázky
+        const questions = [
+            { text: "Jak hluboko je AI zapojena do vaší práce?", options: [
+                { text: "Vůbec, zatím se jí vyhýbám.", score: 'A' },
+                { text: "Sleduji novinky, ale nepoužívám ji.", score: 'B' },
+                { text: "Ad-hoc pomocník pro náhodné úkoly.", score: 'C' },
+                { text: "Pevná součást mého workflow.", score: 'D' },
+                { text: "Stavím vlastní nástroje a agenty.", score: 'E' }
+            ]},
+            { text: "Jakou roli hrajete v procesu tvorby s AI?", options: [
+                { text: "Žádnou, tvořím bez AI.", score: 'A' },
+                { text: "Jsem pasivní příjemce (copy-paste).", score: 'B' },
+                { text: "Jsem korektor (opravuji chyby).", score: 'C' },
+                { text: "Jsem editor (dodávám vizi).", score: 'D' },
+                { text: "Jsem architekt (navrhuji systémy).", score: 'E' }
+            ]}
+        ];
+
+        let currentIdx = 0;
+        let answers = [];
+
+        window.render = () => {
+            const q = questions[currentIdx];
+            document.getElementById('q-title').innerText = q.text;
+            const container = document.getElementById('q-options');
+            container.innerHTML = '';
+            q.options.forEach(opt => {
+                const b = document.createElement('div');
+                b.className = "p-4 border-2 border-slate-200 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all text-slate-700 font-medium";
+                b.innerText = opt.text;
+                b.onclick = () => {
+                    answers[currentIdx] = opt.score;
+                    if (currentIdx < questions.length - 1) {
+                        currentIdx++; render();
+                    } else {
+                        submit();
+                    }
+                };
+                container.appendChild(b);
+            });
+        };
+
+        async function submit() {
+            const finalKey = answers[answers.length - 1];
+            if (currentUser) {
+                // Ukládáme do jednoduché kolekce "responses"
+                await setDoc(doc(db, "responses", currentUser.uid), {
+                    levelKey: finalKey,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('res-name').innerText = "Úroveň " + finalKey;
+        }
+
+        window.start = () => {
+            document.getElementById('intro').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            render();
+        };
+    </script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white shadow-2xl rounded-[2.5rem] p-8">
+        <div id="intro" class="text-center">
+            <h1 class="text-2xl font-black mb-4">AI Diagnostika</h1>
+            <button onclick="start()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold">Spustit</button>
+        </div>
+        <div id="quiz-screen" class="hidden">
+            <h2 id="q-title" class="text-lg font-bold mb-6"></h2>
+            <div id="q-options" class="space-y-3"></div>
+        </div>
+        <div id="result-screen" class="hidden text-center">
+            <h2 id="res-name" class="text-3xl font-black text-blue-600 mb-4"></h2>
+            <p class="text-slate-500 text-sm">Vaše odpověď byla odeslána.</p>
+        </div>
+    </div>
+</body>
+</html>
