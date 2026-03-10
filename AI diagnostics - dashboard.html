@@ -59,10 +59,11 @@
                 // První krok: Potvrzení
                 isConfirming = true;
                 btn.innerText = "Opravdu smazat vše?";
-                btn.classList.replace('bg-slate-800', 'bg-red-600');
-                btn.classList.add('animate-pulse');
                 
-                // Pokud uživatel do 5 sekund neklikne znovu, resetujeme stav tlačítka
+                // Změna barev: odebereme slate, přidáme red (i pro hover)
+                btn.classList.remove('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
+                btn.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
+                
                 setTimeout(() => {
                     if (isConfirming) {
                         isConfirming = false;
@@ -88,7 +89,7 @@
                 btn.disabled = false;
             } catch (error) {
                 console.error("Chyba při mazání:", error);
-                alert("Nepodařilo se smazat data. Zkontrolujte Security Rules.");
+                alert("Nepodařilo se smazat data.");
                 isConfirming = false;
                 resetButtonStyle();
                 btn.disabled = false;
@@ -98,8 +99,9 @@
         function resetButtonStyle() {
             const btn = document.getElementById('reset-btn');
             btn.innerText = "Vynulovat data";
-            btn.classList.replace('bg-red-600', 'bg-slate-800');
-            btn.classList.remove('animate-pulse');
+            // Vrátíme původní barvy
+            btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
+            btn.classList.add('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
         }
 
         window.onload = async () => {
