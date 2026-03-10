@@ -55,13 +55,11 @@
         let currentUser = null;
         let currentIdx = 0;
         let totalPoints = 0;
-        // Tracking points per category for nuanced feedback
-        let categoryScores = {
-            "Nástroje a rutiny": 0,
-            "Prompt Engineering": 0,
-            "Strategie a bezpečnost": 0,
-            "Tým a budoucnost": 0
-        };
+        let categoryScores = { "Nástroje a rutiny": 0, "Prompt Engineering": 0, "Strategie a bezpečnost": 0, "Tým a budoucnost": 0 };
+
+        // --- ALIAS LISTS ---
+        const adjectives = ["Modrý", "Rychlý", "Zlatý", "Veselý", "Smutný", "Tajný", "Křemíkový", "Kybernetický", "Laserový", "Odvážný", "Klidný", "Divoký", "Chytrý", "Mocný", "Stříbrný", "Bleskový", "Vesmírný", "Digitální", "Kódový", "Stabilní"];
+        const nouns = ["Tygr", "Robot", "Lev", "Orel", "Gepard", "Medvěd", "Jelen", "Vlk", "Sokol", "Drak", "Android", "Procesor", "Agent", "Sparing", "Kód", "Server", "Čip", "Modul", "Senzor", "Algoritmus"];
 
         onAuthStateChanged(auth, (user) => { if (user) currentUser = user; });
         signInAnonymously(auth).catch(console.error);
@@ -92,86 +90,19 @@
             { cat: "Tým a budoucnost", text: "Jak AI ovlivnila váš pocit produktivity a páky?", options: [{text:"Nijak",p:0},{text:"Dělám úkoly o něco rychleji",p:1},{text:"Dělám věci, které bych dřív vůbec nestíhal",p:2},{text:"Můj přínos je ve strategii",p:3}]}
         ];
 
-        // Mezery (Gap analysis) doporučení podle nejslabší kategorie
         const categoryGapTips = {
-            "Nástroje a rutiny": {
-                name: "Rozšíření arzenálu",
-                desc: "Vaším největším prostorem pro růst je šíře používaných nástrojů. Neomezujte se jen na jeden chat.",
-                action: "Vyzkoušejte specializované modely (např. Perplexity pro rešerše nebo Claude pro komplexní analýzu) a zaveďte si pravidlo 'AI First' u každého nového úkolu."
-            },
-            "Prompt Engineering": {
-                name: "Mistrovství komunikace",
-                desc: "Mezery máte především v tom, jak s AI mluvíte. Vaše zadání jsou pravděpodobně příliš stručná.",
-                action: "Naučte se rámec PACO (Persona, Akce, Kontext, Omezení). Přestaňte se spokojit s první odpovědí a začněte s AI více iterovat a diskutovat."
-            },
-            "Strategie a bezpečnost": {
-                name: "Kritický odstup a hygiene",
-                desc: "Získáváte body za používání, ale riskujete v oblasti bezpečnosti dat a slepé důvěry v halucinace.",
-                action: "Nastavte si proces křížové validace výstupů. Důsledně anonymizujte firemní data a definujte si úkoly, které jsou pro AI 'tabu' (např. hluboká empatie)."
-            },
-            "Tým a budoucnost": {
-                name: "Sdílení a transformace",
-                desc: "AI používáte dobře individuálně, ale váš tým z toho zatím netěží. Chybí systémové sdílení know-how.",
-                action: "Založte si s kolegy sdílenou 'Knihovnu promptů'. Staňte se mentorem a hledejte cesty, jak AI mění nejen vaše úkoly, ale celou hodnotu vaší profese."
-            }
+            "Nástroje a rutiny": { name: "Rozšíření arzenálu", desc: "Vaším největším prostorem pro růst je šíře nástrojů.", action: "Vyzkoušejte specializované modely pro rešerše a zaveďte pravidlo 'AI First'." },
+            "Prompt Engineering": { name: "Mistrovství komunikace", desc: "Mezery máte v tom, jak s AI mluvíte. Zadání jsou pravděpodobně příliš stručná.", action: "Naučte se rámec Kontext - Úkol - Omezení a více s AI iterujte." },
+            "Strategie a bezpečnost": { name: "Kritický odstup", desc: "Riskujete v oblasti bezpečnosti dat a slepé důvěry.", action: "Nastavte proces křížové validace a důsledně anonymizujte firemní data." },
+            "Tým a budoucnost": { name: "Sdílení a transformace", desc: "AI používáte dobře individuálně, ale chybí systémové sdílení.", action: "Založte sdílenou knihovnu promptů a staňte se interním mentorem." }
         };
 
         const levels = [
-            { 
-                min: 0, max: 8, key: 'A', name: "L0: Pozorovatel na startu", 
-                desc: "AI vnímáte jako vnější jev. Spoléháte na tradiční postupy, které vás v novém tempu světa mohou brzdit. Rizikem je 'digitální slepota' a ztráta náskoku před konkurencí.", 
-                whyMove: "Odbourání bariér a strachu z neznáma. Uvidíte, že AI není konkurent, ale prodloužená ruka vaší vlastní inteligence.",
-                nextDesc: "L1 už AI aktivně zkouší v bezpečném prostředí a nebojí se jí položit první dotazy.",
-                plan: [
-                    { title: "Ztráta ostychu", text: "Použijte chatbota pro osobní věci jako jsou recepty nebo itineráře." },
-                    { title: "Mobilní přístup", text: "Mějte AI v mobilu. Ptejte se hlasem při chůzi pro přirozený návyk." }
-                ],
-                aiProTip: "Zadejte chatbotovi: 'Jsem na úrovni L0 v adopci AI. Navrhni mi 3 mikrokroky na tento týden, které mi zaberou max 2 minuty.'"
-            },
-            { 
-                min: 9, max: 18, key: 'B', name: "L1: Experimentátor (Ad-hoc)", 
-                desc: "Víte, že AI funguje, ale používáte ji nahodile spíše jako vylepšený vyhledávač. Chybí vám systém, důvěra v nástroj a schopnost řídit kvalitu výstupu.", 
-                whyMove: "Přestanete s AI 'bojovat' a začnete ji skutečně řídit. Ušetříte hodiny času týdně díky postupům.",
-                nextDesc: "L2 má své vybrané oblasti, kde AI používá systematicky a buduje si v nich styl.",
-                plan: [
-                    { title: "Delegování", text: "Vyberte 1 rutinu a slibte si ji dělat 14 dní výhradně s asistencí AI." },
-                    { title: "Rámec zadání", text: "Dávejte AI kontext: 'Role experta - Kontext - Úkol - Formát'." }
-                ],
-                aiProTip: "Požádejte o koučink: 'Jsem L1 a používám tě náhodně. Tady je můj popis práce [text]. Kde mi ušetříš 15 minut denně?'"
-            },
-            { 
-                min: 19, max: 29, key: 'C', name: "L2: Pokročilý uživatel (Utility)", 
-                desc: "AI používáte denně a efektivně šetříte čas. Stále však pracujete na úrovni 'zadání úkolů' místo 'architektury procesů'. Chybí vám strategický nadhled.", 
-                whyMove: "Stanete se architektem své práce. Přestanete věci jen dělat rychleji a začnete procesy nově designovat.",
-                nextDesc: "L3 dříve než začne pracovat přemýšlí, co delegovat a jakým oponentem mu AI v dané chvíli bude.",
-                plan: [
-                    { title: "Strategické dělení", text: "Ptejte se: 'Co musí udělat moje hlava a co může vyřešit chatbot?'" },
-                    { title: "Custom Instructions", text: "Nastavte si trvalé preference, aby nástroj znal váš styl komunikace." }
-                ],
-                aiProTip: "Výzva k posunu: 'Působím jako L2. Jak mám změnit své workflow, abych tě používal jako strategického sparing partnera?'"
-            },
-            { 
-                min: 30, max: 40, key: 'D', name: "L3: Strategický lídr (Leverage)", 
-                desc: "Rozumíte pákám (leverage) a multiplikujete svůj vliv díky technologii. Jste vzorem pro okolí, ale zatím možná plně nevyužíváte systémovou automatizaci.", 
-                whyMove: "L4 je o naprosté svobodě. Přestanete být jen uživatelem a stanete se integrátorem nových standardů.",
-                nextDesc: "L4 už nepoužívá AI jako nástroj bokem, ale jako neviditelnou tkáň všech svých pracovních toků.",
-                plan: [
-                    { title: "Vlastní báze", text: "Vytvořte si agenty nebo knihovnu promptů s vaším unikátním know-how." },
-                    { title: "Mentoring", text: "Učte ostatní. Vysvětlováním principů adopce se sami nejrychleji posunete." }
-                ],
-                aiProTip: "Zautomatizujte se: 'Dosáhl jsem L3. Jak s tvou pomocí navrhnout systém k odbavení reportingu bez mého zásahu?'"
-            },
-            { 
-                min: 41, max: 48, key: 'E', name: "L4: AI Integrátor & Maestro", 
-                desc: "AI je organickou součástí vašeho myšlení. Transformujete celé systémy. Vaše hodnota je v kurátorství vizí a strategickém řízení technologické synergie.", 
-                whyMove: "Společenský dopad a inovace na samé hraně možného. Máte potenciál definovat budoucnost svého oboru.",
-                nextDesc: "Další úroveň je 'Systémová autonomie' – stav, kdy vaše procesy běží zcela samy.",
-                plan: [
-                    { title: "Integrace", text: "Propojte chatbota s daty přes API nebo automatizační platformy." },
-                    { title: "Human-Centric", text: "Uvolněný čas investujte do hluboké lidské interakce a vizí." }
-                ],
-                aiProTip: "Strategie: 'Jsem L4. Pomoz mi navrhnout strategii, jak posunout 80 % mého týmu z úrovně L1 na L3 během kvartálu.'"
-            }
+            { min: 0, max: 8, key: 'A', name: "L0: Pozorovatel na startu", desc: "AI vnímáte jako vnější jev. Spoléháte na tradiční postupy, které vás v novém tempu světa mohou brzdit.", whyMove: "Odbourání bariér a strachu z neznáma.", nextDesc: "L1 už AI aktivně zkouší v bezpečném prostředí.", plan: [{ title: "Ztráta ostychu", text: "Použijte chatbota pro osobní věci jako jsou recepty." }, { title: "Mobilní přístup", text: "Mějte AI v mobilu. Ptejte se hlasem." }], aiProTip: "Zadejte chatbotovi: 'Jsem na úrovni L0. Navrhni mi 3 mikrokroky na tento týden, které mi zaberou max 2 minuty.'" },
+            { min: 9, max: 18, key: 'B', name: "L1: Experimentátor (Ad-hoc)", desc: "Víte, že AI funguje, ale používáte ji nahodile jako vyhledávač. Chybí vám systém a důvěra.", whyMove: "Přestanete s AI 'bojovat' a začnete ji skutečně řídit.", nextDesc: "L2 má své vybrané oblasti, kde AI používá systematicky.", plan: [{ title: "Delegování", text: "Vyberte 1 rutinu a dělejte ji 14 dní s AI." }, { title: "Rámec zadání", text: "Dávejte AI kontext: Role - Kontext - Úkol - Formát." }], aiProTip: "Požádejte o koučink: 'Jsem L1 a používám tě náhodně. Kde mi dokážeš ušetřit 15 minut denně?'" },
+            { min: 19, max: 29, key: 'C', name: "L2: Pokročilý uživatel (Utility)", desc: "AI používáte denně a šetříte čas. Stále však pracujete na úrovni zadání úkolů.", whyMove: "Stanete se architektem své práce. Přestanete jen dělat rychleji.", nextDesc: "L3 dříve než začne pracovat přemýšlí, co delegovat.", plan: [{ title: "Strategické dělení", text: "Ptejte se: Co musí udělat moje hlava a co vyřeší chatbot?" }, { title: "Custom Instructions", text: "Nastavte si v AI trvalé preference." }], aiProTip: "Výzva k posunu: 'Působím jako L2. Jak mám změnit své workflow, abych tě používal jako strategického partnera?'" },
+            { min: 30, max: 40, key: 'D', name: "L3: Strategický lídr (Leverage)", desc: "Rozumíte pákám a multiplikujete svůj vliv. Jste vzorem pro okolí.", whyMove: "L4 je o naprosté svobodě a integraci nových standardů.", nextDesc: "L4 už nepoužívá AI jako nástroj bokem, ale jako tkáň procesů.", plan: [{ title: "Vlastní báze", text: "Vytvořte si agenty nebo knihovnu s vaším know-how." }, { title: "Mentoring", text: "Učte ostatní. Tím se sami nejrychleji posunete." }], aiProTip: "Zautomatizujte se: 'Dosáhl jsem L3. Jak s tvou pomocí navrhnout systém k odbavení reportingu bez mého zásahu?'" },
+            { min: 41, max: 48, key: 'E', name: "L4: AI Integrátor & Maestro", desc: "AI je součástí vašeho myšlení. Transformujete celé systémy. Vaše hodnota je v kurátorství vizí.", whyMove: "Společenský dopad a inovace na samé hraně možného.", nextDesc: "Další úroveň je 'Systémová autonomie' – procesy běží zcela samy.", plan: [{ title: "Integrace", text: "Propojte chatbota s daty přes API nebo Make/Zapier." }, { title: "Human-Centric", text: "Uvolněný čas investujte do hloubkové empatie a vizí." }], aiProTip: "Strategie: 'Jsem L4. Pomoz mi navrhnout strategii, jak posunout 80 % týmu z L1 na L3.'" }
         ];
 
         const content = document.getElementById('content');
@@ -238,7 +169,7 @@
                 b.innerHTML = `<div class="w-4 h-4 rounded-full border-2 border-slate-200 flex-shrink-0"></div> <span class="leading-tight">${opt.text}</span>`;
                 b.onclick = () => {
                     totalPoints += opt.p;
-                    categoryScores[q.cat] += opt.p; // Track score for specific category
+                    categoryScores[q.cat] += opt.p;
                     if (currentIdx < questions.length - 1) {
                         const oldCat = questions[currentIdx].cat;
                         currentIdx++;
@@ -256,16 +187,18 @@
         async function finishQuiz() {
             const result = levels.find(l => totalPoints >= l.min && totalPoints <= l.max) || levels[0];
             
-            // Find weakest category (Gap Analysis)
+            // Gap Analysis
             let weakestCat = "Nástroje a rutiny";
             let minScore = 999;
             for (const [cat, score] of Object.entries(categoryScores)) {
-                if (score < minScore) {
-                    minScore = score;
-                    weakestCat = cat;
-                }
+                if (score < minScore) { minScore = score; weakestCat = cat; }
             }
             const gapTip = categoryGapTips[weakestCat];
+
+            // Generate Alias
+            const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const noun = nouns[Math.floor(Math.random() * nouns.length)];
+            const alias = `${adj} ${noun}`;
 
             progressBar.style.width = '100%';
             progressBar.className = 'h-full bg-blue-600 transition-all duration-500';
@@ -305,7 +238,6 @@
                             </div>
                         </div>
 
-                        <!-- Nová dynamická sekce: Nejslabší článek -->
                         <div>
                             <h3 class="flex items-center gap-2 text-red-600 font-bold text-xs uppercase tracking-wider mb-2 section-title font-poppins">
                                 <i data-lucide="target" size="14"></i> Priorita pro váš rozvoj: ${gapTip.name}
@@ -339,6 +271,18 @@
                         <button id="download-pdf-btn" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 hover:bg-black touch-manipulation">
                             <i data-lucide="download"></i> Stáhnout PDF Report
                         </button>
+
+                        <!-- Reveal Alias Section -->
+                        <div id="alias-reveal-section" class="mt-6 p-6 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 transition-all">
+                             <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-3">Vaše identita pro aktivitu</p>
+                             <div id="alias-display" class="hidden animate-fade-in mb-3">
+                                 <span class="text-xl font-black text-blue-600 uppercase tracking-tight">${alias}</span>
+                             </div>
+                             <button id="reveal-btn" class="text-blue-600 font-bold text-[10px] uppercase tracking-widest hover:underline flex items-center justify-center gap-2 mx-auto">
+                                <i data-lucide="eye" size="12"></i> Odhalit můj tajný alias
+                             </button>
+                        </div>
+
                         <button onclick="location.reload()" class="text-slate-400 font-bold text-[10px] uppercase hover:underline py-2">Zkusit znovu</button>
                     </div>
                 </div>
@@ -361,78 +305,34 @@
             });
             lucide.createIcons();
 
+            // Reveal logic
+            document.getElementById('reveal-btn').onclick = function() {
+                this.classList.add('hidden');
+                document.getElementById('alias-display').classList.remove('hidden');
+                document.getElementById('alias-reveal-section').classList.add('border-blue-200', 'bg-blue-50/30');
+            };
+
             document.getElementById('download-pdf-btn').onclick = function() {
                 const element = document.getElementById('report-to-pdf');
-                const opt = {
-                    margin:       [10, 15, 10, 15],
-                    filename:     'AI_Maturity_Report.pdf',
-                    image:        { type: 'jpeg', quality: 1.0 },
-                    html2canvas:  { 
-                        scale: 2, 
-                        useCORS: true,
-                        letterRendering: true,
-                        backgroundColor: '#ffffff',
-                        width: 800,
+                html2pdf().set({
+                    margin: [10, 15, 10, 15],
+                    filename: 'AI_Maturity_Report.pdf',
+                    image: { type: 'jpeg', quality: 1.0 },
+                    html2canvas: { 
+                        scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff', width: 800,
                         onclone: (clonedDoc) => {
                             const iconCircle = clonedDoc.querySelector('.icon-circle');
-                            if (iconCircle) {
-                                iconCircle.style.backgroundColor = 'white';
-                                iconCircle.style.border = 'none';
-                                iconCircle.style.boxShadow = 'none';
-                            }
+                            if (iconCircle) { iconCircle.style.backgroundColor = 'white'; iconCircle.style.border = 'none'; iconCircle.style.boxShadow = 'none'; }
                             const ribbonIcon = clonedDoc.querySelector('.ribbon-icon');
-                            if (ribbonIcon) ribbonIcon.style.visibility = 'hidden';
-
-                            clonedDoc.querySelectorAll('*').forEach(el => {
-                                el.style.boxShadow = 'none';
-                                el.style.textShadow = 'none';
-                                el.style.animation = 'none';
-                                el.style.transition = 'none';
-                            });
-
+                            if (ribbonIcon) { ribbonIcon.style.visibility = 'hidden'; }
+                            clonedDoc.querySelectorAll('*').forEach(el => { el.style.boxShadow = 'none'; el.style.animation = 'none'; });
                             const grid = clonedDoc.querySelector('.compare-grid');
-                            if (grid) {
-                                grid.style.display = 'grid';
-                                grid.style.gridTemplateColumns = '1fr 1fr';
-                            }
-
-                            const title = clonedDoc.querySelector('.report-title');
-                            if (title) title.style.fontSize = '22px';
-                            
-                            clonedDoc.querySelectorAll('.section-title').forEach(el => {
-                                el.style.fontSize = '12px';
-                                el.style.marginBottom = '6px';
-                            });
-
-                            clonedDoc.querySelectorAll('.main-desc').forEach(el => {
-                                el.style.fontSize = '10.5px';
-                                el.style.lineHeight = '1.4';
-                            });
-
-                            clonedDoc.querySelectorAll('.sub-text').forEach(el => {
-                                el.style.fontSize = '9.5px';
-                                el.style.lineHeight = '1.3';
-                            });
-
-                            clonedDoc.querySelectorAll('.plan-title').forEach(el => el.style.fontSize = '10.5px');
-                            clonedDoc.querySelectorAll('.plan-desc').forEach(el => el.style.fontSize = '9.5px');
-
-                            const tipBox = clonedDoc.getElementById('ai-tip-box');
-                            if (tipBox) {
-                                const pText = tipBox.querySelector('.prompt-text');
-                                if (pText) pText.style.fontSize = '9px';
-                            }
-
-                            clonedDoc.querySelectorAll('p, h1, h2, h3, h4, span, div').forEach(el => {
-                                if (!el.closest('#ai-tip-box')) {
-                                    el.style.color = '#1e293b';
-                                }
-                            });
+                            if (grid) { grid.style.display = 'grid'; grid.style.gridTemplateColumns = '1fr 1fr'; }
+                            clonedDoc.querySelectorAll('p, h1, h2, h3, h4, span, div').forEach(el => { if (!el.closest('#ai-tip-box')) el.style.color = '#1e293b'; });
                         }
                     },
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
-                html2pdf().set(opt).from(element).save();
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(element).save();
             };
 
             if (currentUser) {
@@ -443,8 +343,9 @@
                         levelKey: result.key, 
                         levelName: result.name, 
                         points: totalPoints, 
-                        categoryBreakdown: categoryScores, // Send detailed breakdown to DB
+                        categoryBreakdown: categoryScores,
                         weakestArea: weakestCat,
+                        alias: alias, // SAVE ALIAS TO DB
                         ts: new Date().toISOString() 
                     });
                 } catch (e) { console.error(e); }
