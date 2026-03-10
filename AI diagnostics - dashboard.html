@@ -3,9 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Dashboard - AI Workshop</title>
+    <title>Lektorský Dashboard | Live Analysis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        h1, h2, h3, .font-poppins { font-family: 'Poppins', sans-serif; }
+        .chart-card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); }
+        .transition-all { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8">
+
+    <div class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-10 gap-6">
+            <div>
+                <h1 class="text-3xl font-black italic text-blue-500 tracking-tight uppercase">Live <span class="text-white">Analysis</span></h1>
+                <p class="text-slate-500 text-[10px] mt-1 uppercase tracking-[0.3em] font-bold">AI Maturity Index Dashboard</p>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button id="reset-btn" onclick="handleReset()" class="bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] uppercase font-bold tracking-widest px-4 py-2.5 rounded-xl transition-all border border-white/5">
+                    Vynulovat data
+                </button>
+                <button id="export-csv-btn" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] uppercase font-bold tracking-widest px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2">
+                    <i data-lucide="file-spreadsheet" size="14"></i> Exportovat CSV
+                </button>
+                <div class="text-right border-l border-white/10 pl-6">
+                    <div id="total-count" class="text-5xl font-black text-white leading-none">0</div>
+                    <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Účastníků</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="space-y-8">
+            <!-- Graph Card -->
+            <div class="chart-card p-6 sm:p-10 rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden relative min-h-[500px] flex flex-col">
+                <h3 class="text-slate-400 text-[10px] font-bold uppercase mb-8 tracking-[0.25em] text-center">Rozložení kompetencí v reálném čase</h3>
+                <div class="relative flex-grow h-full">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-12 flex justify-between items-center px-4">
+            <p class="text-slate-600 text-[9px] uppercase tracking-widest font-medium">Auto-sync via Firebase Firestore</p>
+            <div class="flex gap-2 items-center">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="text-slate-600 text-[9px] uppercase tracking-widest font-medium">Live Connection Active</span>
+            </div>
+        </footer>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -21,150 +75,141 @@
             appId: "1:965470292600:web:28ba845829a3c849773b8d"
         };
 
-        const appId = 'ai-diagnostika-2024'; 
+        const internalAppId = 'ai-diagnostika-2024';
+        const levelNames = {
+            'A': 'L0: Pozorovatel',
+            'B': 'L1: Experimentátor',
+            'C': 'L2: Pokročilý uživatel',
+            'D': 'L3: Strategický lídr',
+            'E': 'L4: AI Integrátor'
+        };
+
         let chart;
-        let db, auth;
+        let lastData = [];
         let isConfirming = false;
 
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- CHART INIT ---
         function initChart() {
-            const ctx = document.getElementById('chart').getContext('2d');
+            const ctx = document.getElementById('mainChart').getContext('2d');
             chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['L0: Rezistence', 'L1: Pozorovatel', 'L2: Experimentátor', 'L3: Stratég', 'L4: Integrátor'],
-                    datasets: [{ 
-                        label: 'Počet účastníků', 
-                        data: [0, 0, 0, 0, 0], 
+                    labels: Object.values(levelNames),
+                    datasets: [{
+                        label: 'Účastníci',
+                        data: [0, 0, 0, 0, 0],
                         backgroundColor: '#3b82f6',
-                        borderRadius: 12
+                        hoverBackgroundColor: '#60a5fa',
+                        borderRadius: 12,
+                        maxBarThickness: 60
                     }]
                 },
-                options: { 
+                options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { 
-                        y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
-                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1, color: '#94a3b8', font: { size: 11, weight: '600' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        x: { 
+                            ticks: { color: '#94a3b8', font: { size: 10, weight: '700' } },
+                            grid: { display: false }
+                        }
                     },
-                    plugins: { legend: { display: false } }
+                    plugins: {
+                        legend: { display: false }
+                    }
                 }
             });
         }
 
-        // --- FUNKCE PRO MAZÁNÍ DAT ---
+        // --- RESET LOGIKA ---
         window.handleReset = async () => {
             const btn = document.getElementById('reset-btn');
-            
             if (!isConfirming) {
-                // První krok: Potvrzení
                 isConfirming = true;
                 btn.innerText = "Opravdu smazat vše?";
-                
-                // Změna barev: odebereme slate, přidáme red (i pro hover)
-                btn.classList.remove('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
-                btn.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
-                
+                btn.classList.remove('bg-slate-800', 'text-slate-400');
+                btn.classList.add('bg-red-600', 'text-white', 'animate-pulse');
                 setTimeout(() => {
                     if (isConfirming) {
                         isConfirming = false;
-                        resetButtonStyle();
+                        btn.innerText = "Vynulovat data";
+                        btn.classList.remove('bg-red-600', 'text-white', 'animate-pulse');
+                        btn.classList.add('bg-slate-800', 'text-slate-400');
                     }
                 }, 5000);
                 return;
             }
 
-            // Druhý krok: Samotné mazání
             try {
-                btn.innerText = "Mažu data...";
-                btn.disabled = true;
-
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'responses');
-                const snapshot = await getDocs(colRef);
-                
-                const deletePromises = snapshot.docs.map(d => deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'responses', d.id)));
-                await Promise.all(deletePromises);
-
+                btn.innerText = "Mažu...";
+                const colRef = collection(db, 'artifacts', internalAppId, 'public', 'data', 'responses');
+                const snap = await getDocs(colRef);
+                const deletions = snap.docs.map(d => deleteDoc(doc(db, 'artifacts', internalAppId, 'public', 'data', 'responses', d.id)));
+                await Promise.all(deletions);
                 isConfirming = false;
-                resetButtonStyle();
-                btn.disabled = false;
-            } catch (error) {
-                console.error("Chyba při mazání:", error);
-                alert("Nepodařilo se smazat data.");
-                isConfirming = false;
-                resetButtonStyle();
-                btn.disabled = false;
-            }
+                btn.innerText = "Vynulovat data";
+                btn.classList.remove('bg-red-600', 'text-white', 'animate-pulse');
+                btn.classList.add('bg-slate-800', 'text-slate-400');
+            } catch (e) { console.error(e); }
         };
 
-        function resetButtonStyle() {
-            const btn = document.getElementById('reset-btn');
-            btn.innerText = "Vynulovat data";
-            // Vrátíme původní barvy
-            btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
-            btn.classList.add('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
+        // --- CSV EXPORT ---
+        document.getElementById('export-csv-btn').onclick = () => {
+            if (lastData.length === 0) return;
+            
+            // Header
+            let csv = "UID;LevelKey;LevelName;Points;WeakestArea;Timestamp\n";
+            
+            // Rows
+            lastData.forEach(row => {
+                csv += `${row.uid || ''};${row.levelKey || ''};${row.levelName || ''};${row.points || 0};${row.weakestArea || ''};${row.ts || ''}\n`;
+            });
+
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `AI_Maturity_Data_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // --- DATA LOGIKA ---
+        async function connect() {
+            await signInAnonymously(auth);
+            const colRef = collection(db, 'artifacts', internalAppId, 'public', 'data', 'responses');
+            onSnapshot(colRef, (snap) => {
+                const data = snap.docs.map(d => d.data());
+                lastData = data;
+                updateUI(data);
+            });
         }
 
-        window.onload = async () => {
-            initChart();
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
+        function updateUI(data) {
+            const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+            data.forEach(d => { if(counts[d.levelKey] !== undefined) counts[d.levelKey]++; });
+            document.getElementById('total-count').innerText = data.length;
+            if (chart) {
+                chart.data.datasets[0].data = [counts.A, counts.B, counts.C, counts.D, counts.E];
+                chart.update();
+            }
+        }
 
-            await signInAnonymously(auth);
-            
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'responses');
-                    onSnapshot(colRef, (snap) => {
-                        const data = snap.docs.map(d => d.data());
-                        document.getElementById('count').innerText = data.length;
-                        
-                        const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
-                        data.forEach(d => { if(counts[d.levelKey] !== undefined) counts[d.levelKey]++; });
-                        
-                        if (chart) {
-                            chart.data.datasets[0].data = [counts.A, counts.B, counts.C, counts.D, counts.E];
-                            chart.update();
-                        }
-                    });
-                }
-            });
+        window.onload = () => {
+            initChart();
+            lucide.createIcons();
+            connect();
         };
     </script>
-</head>
-<body class="bg-slate-900 text-white min-h-screen p-8 font-sans">
-    <div class="max-w-4xl mx-auto">
-        <header class="flex justify-between items-end mb-12">
-            <div>
-                <h1 class="text-3xl font-black text-blue-500 italic">Live <span class="text-white">Analysis</span></h1>
-                <p class="text-slate-500 text-[10px] mt-1 uppercase tracking-[0.3em] font-bold">AI Adoption Dashboard</p>
-            </div>
-            
-            <div class="flex items-center gap-8">
-                <button id="reset-btn" onclick="handleReset()" class="bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] uppercase font-bold tracking-widest px-4 py-2 rounded-lg transition-all border border-white/5">
-                    Vynulovat data
-                </button>
-                <div class="text-right">
-                    <div id="count" class="text-6xl font-black text-white leading-none">0</div>
-                    <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Odpovědí</div>
-                </div>
-            </div>
-        </header>
-
-        <div class="bg-slate-800/50 p-10 rounded-[3rem] shadow-2xl border border-white/5 backdrop-blur-sm">
-            <h3 class="text-slate-400 text-[10px] font-bold uppercase mb-10 tracking-[0.25em] text-center">Rozložení kompetencí v reálném čase</h3>
-            <div class="relative h-[400px]">
-                <canvas id="chart"></canvas>
-            </div>
-        </div>
-
-        <footer class="mt-12 flex justify-between items-center px-4">
-            <p class="text-slate-600 text-[9px] uppercase tracking-widest font-medium">Auto-sync via Firebase Firestore</p>
-            <div class="flex gap-2">
-                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span class="text-slate-600 text-[9px] uppercase tracking-widest font-medium">Live Connection</span>
-            </div>
-        </footer>
-    </div>
 </body>
 </html>
