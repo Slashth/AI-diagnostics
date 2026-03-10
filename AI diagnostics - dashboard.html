@@ -9,9 +9,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- KONFIGURACE FIREBASE (Musí být stejná jako v index.html) ---
+        // --- KONFIGURACE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyBmy6Wg2hgML35nbBqavkDDDV1aIZTCqsU",
             authDomain: "ai-diagnostika.firebaseapp.com",
@@ -21,10 +21,10 @@
             appId: "1:965470292600:web:28ba845829a3c849773b8d"
         };
 
-        // --- IDENTITY NASTAVENÍ (Musí být stejné jako v index.html) ---
         const appId = 'ai-diagnostika-2024'; 
-
         let chart;
+        let db, auth;
+        let isConfirming = false;
 
         function initChart() {
             const ctx = document.getElementById('chart').getContext('2d');
@@ -43,86 +43,111 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: { 
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { stepSize: 1, color: '#94a3b8' },
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
-                        },
-                        x: {
-                            ticks: { color: '#94a3b8' },
-                            grid: { display: false }
-                        }
+                        y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                        x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
                     },
-                    plugins: {
-                        legend: { display: false }
-                    }
+                    plugins: { legend: { display: false } }
                 }
             });
         }
 
+        // --- FUNKCE PRO MAZÁNÍ DAT ---
+        window.handleReset = async () => {
+            const btn = document.getElementById('reset-btn');
+            
+            if (!isConfirming) {
+                // První krok: Potvrzení
+                isConfirming = true;
+                btn.innerText = "Opravdu smazat vše?";
+                btn.classList.replace('bg-slate-800', 'bg-red-600');
+                btn.classList.add('animate-pulse');
+                
+                // Pokud uživatel do 5 sekund neklikne znovu, resetujeme stav tlačítka
+                setTimeout(() => {
+                    if (isConfirming) {
+                        isConfirming = false;
+                        resetButtonStyle();
+                    }
+                }, 5000);
+                return;
+            }
+
+            // Druhý krok: Samotné mazání
+            try {
+                btn.innerText = "Mažu data...";
+                btn.disabled = true;
+
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'responses');
+                const snapshot = await getDocs(colRef);
+                
+                const deletePromises = snapshot.docs.map(d => deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'responses', d.id)));
+                await Promise.all(deletePromises);
+
+                isConfirming = false;
+                resetButtonStyle();
+                btn.disabled = false;
+            } catch (error) {
+                console.error("Chyba při mazání:", error);
+                alert("Nepodařilo se smazat data. Zkontrolujte Security Rules.");
+                isConfirming = false;
+                resetButtonStyle();
+                btn.disabled = false;
+            }
+        };
+
+        function resetButtonStyle() {
+            const btn = document.getElementById('reset-btn');
+            btn.innerText = "Vynulovat data";
+            btn.classList.replace('bg-red-600', 'bg-slate-800');
+            btn.classList.remove('animate-pulse');
+        }
+
         window.onload = async () => {
             initChart();
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
 
-            try {
-                const app = initializeApp(firebaseConfig);
-                const auth = getAuth(app);
-                const db = getFirestore(app);
-
-                // RULE 3: Přihlášení před čtením dat
-                await signInAnonymously(auth);
-                
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        // RULE 1: Striktní cesta (shodná se Security Rules)
-                        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'responses');
+            await signInAnonymously(auth);
+            
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'responses');
+                    onSnapshot(colRef, (snap) => {
+                        const data = snap.docs.map(d => d.data());
+                        document.getElementById('count').innerText = data.length;
                         
-                        onSnapshot(colRef, (snap) => {
-                            const data = snap.docs.map(d => d.data());
-                            document.getElementById('count').innerText = data.length;
-                            
-                            // Mapování výsledků na indexy grafu (A=L0, B=L1, C=L2, D=L3, E=L4)
-                            const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
-                            data.forEach(d => { 
-                                if(counts[d.levelKey] !== undefined) counts[d.levelKey]++; 
-                            });
-                            
-                            if (chart) {
-                                chart.data.datasets[0].data = [counts.A, counts.B, counts.C, counts.D, counts.E];
-                                chart.update();
-                            }
-                            document.getElementById('status-message').innerHTML = '';
-                        }, (error) => {
-                            console.error("Firestore Error:", error);
-                            document.getElementById('status-message').innerHTML = `
-                                <div class="bg-red-500/20 border border-red-500 p-4 rounded-xl text-red-200 text-xs text-center">
-                                    <strong>Chyba oprávnění:</strong> Firestore zamítl přístup k cestě. <br>
-                                    Zkontrolujte Security Rules pro appId: <code>${appId}</code>
-                                </div>
-                            `;
-                        });
-                    }
-                });
-
-            } catch (error) {
-                console.error("Initialization Error:", error);
-            }
+                        const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+                        data.forEach(d => { if(counts[d.levelKey] !== undefined) counts[d.levelKey]++; });
+                        
+                        if (chart) {
+                            chart.data.datasets[0].data = [counts.A, counts.B, counts.C, counts.D, counts.E];
+                            chart.update();
+                        }
+                    });
+                }
+            });
         };
     </script>
 </head>
 <body class="bg-slate-900 text-white min-h-screen p-8 font-sans">
     <div class="max-w-4xl mx-auto">
-        <header class="flex justify-between items-center mb-12">
+        <header class="flex justify-between items-end mb-12">
             <div>
                 <h1 class="text-3xl font-black text-blue-500 italic">Live <span class="text-white">Analysis</span></h1>
                 <p class="text-slate-500 text-[10px] mt-1 uppercase tracking-[0.3em] font-bold">AI Adoption Dashboard</p>
             </div>
-            <div class="text-right">
-                <div id="count" class="text-6xl font-black text-white leading-none">0</div>
-                <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Odpovědí</div>
+            
+            <div class="flex items-center gap-8">
+                <button id="reset-btn" onclick="handleReset()" class="bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] uppercase font-bold tracking-widest px-4 py-2 rounded-lg transition-all border border-white/5">
+                    Vynulovat data
+                </button>
+                <div class="text-right">
+                    <div id="count" class="text-6xl font-black text-white leading-none">0</div>
+                    <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Odpovědí</div>
+                </div>
             </div>
         </header>
-
-        <div id="status-message" class="mb-8"></div>
 
         <div class="bg-slate-800/50 p-10 rounded-[3rem] shadow-2xl border border-white/5 backdrop-blur-sm">
             <h3 class="text-slate-400 text-[10px] font-bold uppercase mb-10 tracking-[0.25em] text-center">Rozložení kompetencí v reálném čase</h3>
