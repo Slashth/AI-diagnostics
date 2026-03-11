@@ -16,7 +16,17 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .option-card:active { transform: scale(0.98); background-color: #f8fafc; }
-        @media print { .no-print { display: none !important; } }
+
+        /* Styly specifické pro PDF export */
+        .pdf-mode { font-size: 10px !important; line-height: 1.2 !important; }
+        .pdf-mode h1 { font-size: 18px !important; margin-bottom: 4px !important; }
+        .pdf-mode h2 { font-size: 10px !important; margin-bottom: 2px !important; }
+        .pdf-mode h3 { font-size: 11px !important; margin-bottom: 4px !important; }
+        .pdf-mode section { margin-bottom: 8px !important; break-inside: avoid; }
+        .pdf-mode .bg-slate-50, .pdf-mode .bg-indigo-50\/50, .pdf-mode .bg-blue-50\/50, .pdf-mode .bg-red-50\/50 { padding: 10px !important; border-radius: 8px !important; }
+        .pdf-mode .space-y-10 { gap: 0.5rem !important; display: flex; flex-direction: column; }
+        .pdf-mode #alias-box { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; }
+        .pdf-mode .no-print { display: none !important; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-2 sm:p-4 text-slate-900 text-sm">
@@ -97,7 +107,7 @@
         };
 
         const levels = [
-            { min: 0, max: 8, key: 'A', name: "L0: Pozorovatel na startu", desc: "AI vnímáte jako vnější technologický fenomén. Zatím vyčkáváte, zatímco svět kolem zrychluje. Aktuálně riskujete, že tradiční postupy, na které spoléháte, se stanou neúměrně drahými z hlediska času i energie.", whyMove: "Odbourání mentálních bloků a získání první skutečné zkušenosti s okamžitým výsledkem.", nextDesc: "Přejdete do fáze aktivního experimentování, kde AI přestane být tématem zpráv a stane se vaším osobním asistentem.", plan: [{ title: "Demystifikace", text: "Zkuste AI pro banální úkoly: nechte ji napsat osnovu e-mailu nebo recept z ingrediencí v lednici." }, { title: "Mobilní impuls", text: "Nainstalujte si mobilní aplikaci a ptejte se hlasem. Zjistíte, že AI je k dispozici 24/7." }], aiProTip: "Zadejte chatbotovi: 'Jsem začátečník. Navrhni mi 3 způsoby, jak mi ušetřit 5 minut denně.'", methodology: "Cílem není dokonalost, ale zvyk. Stačí jeden úspěšný dotaz denně, aby se mozek přepnul do režimu spolupráce." },
+            { min: 0, max: 8, key: 'A', name: "L0: Pozorovatel na startu", desc: "AI vnímáte jako vnější technologický fenomén. Zatím vyčkáváte, zatímco svět kolem zrychluje. Aktuálně riskujete, že tradiční postupy, na které spoléháte, se stanou neúměrně drahými z hlediska času i energie.", whyMove: "Odbourání mentálních bloků a získání první skutečné zkušenosti s okamžitým výsledkem.", nextDesc: "Přejdete do fáze aktivního experimentování, kde AI přestane být tématem zpráv a stane se vaším osobním asistentem.", plan: [{ title: "Demystifikace", text: "Zkuste AI pro banální úkoly: nechte ji napsat osnovu e-mailu nebo recept z ingrediencí v lednici." }, { title: "Mobilní impuls", text: "Nainstalujte si mobilní aplikaci a ptejte se hlasem. Zjistíte, že AI je k dispozici 24/7." }], aiProTip: "Zadejte chatbotovi: 'Jsem začátečník. Navrhni mi 3 způsoby, jak mi ušetřit 5 minut denně.'", methodology: "Cílem není dokonalost, ale zvyk. Stačí jeden úspěšný dotaz denně, aby se mozek přepnul do režimu spolupráce s technologií." },
             { min: 9, max: 18, key: 'B', name: "L1: Experimentátor (Ad-hoc)", desc: "AI už znáte, ale používáte ji nahodile jako lepší Google. Chybí vám systém – občas dostanete skvělý výsledek, jindy jste frustrováni. AI pro vás stále není standard, ale zajímavý doplněk, na který si vzpomenete až v nouzi.", whyMove: "Získání předvídatelnosti. Přestanete s AI 'bojovat' a začnete ji skutečně řídit skrze správná zadání.", nextDesc: "Stanete se pokročilým uživatelem, který má pro vybrané úkoly vyvinuté vlastní, spolehlivé postupy.", plan: [{ title: "Rámec zadání", text: "Začněte používat strukturu: ROLE - ÚKOL - FORMÁT. Uvidíte okamžitý skok v kvalitě." }, { title: "Audit rutin", text: "Vyberte 1 činnost týdně a slibte si, že ji 14 dní budete dělat výhradně s pomocí AI." }], aiProTip: "Prompt: 'Mám tendenci ti dávat krátká zadání. Nyní ti napíšu úkol a ty mi navrhni parametry pro nejlepší výsledek.'", methodology: "Nekopírujte slepě. Vnímejte AI jako juniorního kolegu, který potřebuje přesnou supervizi." },
             { min: 19, max: 29, key: 'C', name: "L2: Pokročilý uživatel (Utility)", desc: "AI používáte denně a šetříte hodiny času. Pastí této úrovně je 'falešná produktivita' – děláte staré věci jen o něco rychleji. Stále pracujete na úrovni zadávání úkolů, místo abyste transformovali celé procesy.", whyMove: "Přerod v architekta práce. Přestanete jen delegovat úkoly a začnete delegovat celé rozhodovací procesy.", nextDesc: "Dostanete se na úroveň Stratéga, který dříve než začne pracovat, přemýšlí, jak celý úkol odbavit bez manuálního zásahu.", plan: [{ title: "Custom Instructions", text: "Nastavte si v AI trvalé preference. AI vás přestane zdravit a začne rovnou pracovat." }, { title: "Oponentura", text: "Chtějte od AI kritiku vašich nápadů a hledání slabých míst v projektech." }], aiProTip: "Prompt: 'Navrhni mi 5 radikálních způsobů, jak tento proces transformovat tak, aby zabral o 80 % méně mého času.'", methodology: "Hledejte 'Páku'. Jeden nastavený agent vám ušetří týdny práce. Soustřeďte se na multiplicitu." },
             { min: 30, max: 40, key: 'D', name: "L3: Strategický lídr (Leverage)", desc: "Rozumíte pákám a multiplikujete svůj vliv. AI je váš partner a inovátor. Jste vzorem pro okolí, ale možná narážíte na to, že systém kolem vás se mění pomaleji než vy sami.", whyMove: "Plná integrace a společenský dopad. L4 je o absolutní svobodě a nastavení nových standardů v oboru.", nextDesc: "Stanete se AI Integrátorem (Maestrem), který buduje celé AI ekosystémy pro ostatní v organizaci.", plan: [{ title: "Knihovna agentů", text: "Vytvořte si agenty (Custom GPTs) pro specifické expertízy – od copywritera po právního oponenta." }, { title: "Mentoring", text: "Učte ostatní. Vysvětlováním postupů týmu se sami nejrychleji posunete k hloubkovému pochopení." }], aiProTip: "Prompt: 'Pomoz mi navrhnout plán, jak překonat rezistenci a zvýšit efektivitu týmu o 50 % za kvartál.'", methodology: "Vaším úkolem je řízení kvality a vize. AI neřeší 'jak', ale odbavuje 'co'. Vy určujete strategické 'proč'." },
@@ -232,7 +242,7 @@
 
                     <div class="space-y-10 pdf-space">
                         <!-- Reality Check -->
-                        <section class="section- Reality">
+                        <section class="section-Reality">
                             <h3 class="flex items-center gap-2 text-slate-900 font-bold text-xs uppercase tracking-wider mb-3 font-poppins section-title">
                                 <i data-lucide="search" size="14" class="text-blue-500 no-print"></i> Pohled pod kapotu (Vaše realita)
                             </h3>
@@ -271,7 +281,7 @@
                         </section>
 
                         <!-- Pro Tip Box -->
-                        <section id="ai-tip-section" class="bg-slate-900 text-white p-6 rounded-3xl shadow-xl overflow-hidden relative border border-slate-700 tip-section">
+                        <section id="ai-tip-section" class="bg-slate-900 text-white p-6 rounded-3xl shadow-xl border border-slate-700 tip-section">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-blue-400 font-bold text-[10px] uppercase flex items-center gap-2 font-poppins">
                                     <i data-lucide="rocket" size="14" class="no-print"></i> AI Pro-Tip: Váš akcelerátor
@@ -287,7 +297,7 @@
                             </div>
                         </section>
 
-                        <!-- Reveal Alias (NA KONCI) -->
+                        <!-- Reveal Alias (NA KONCI - V PDF SE NESMÍ ZOBRAZIT) -->
                         <section id="alias-box" class="p-8 border-2 border-dashed border-slate-200 rounded-[2.5rem] bg-slate-50/50 text-center transition-all mt-12 no-print">
                              <p class="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-4 italic">Tento box nechte zavřený do pokynu lektora</p>
                              <div id="alias-locked" class="py-4">
@@ -337,7 +347,7 @@
             document.getElementById('download-pdf-btn').onclick = function() {
                 const element = document.getElementById('report-to-pdf');
                 html2pdf().set({ 
-                    margin: [15, 15, 15, 15], 
+                    margin: [10, 10, 10, 10], 
                     filename: 'AI_Maturity_Report.pdf', 
                     image: { type: 'jpeg', quality: 1.0 }, 
                     html2canvas: { 
@@ -345,42 +355,36 @@
                         useCORS: true, 
                         backgroundColor: '#ffffff',
                         onclone: (clonedDoc) => {
-                            // 1. Fyzické odstranění nechtěných prvků
+                            // 1. Aplikace PDF módu na tělo klonu
+                            const cloneBody = clonedDoc.body;
+                            cloneBody.classList.add('pdf-mode');
+                            
+                            // 2. ABSOLUTNÍ odstranění alias boxu
                             const aliasBox = clonedDoc.getElementById('alias-box');
-                            if (aliasBox) aliasBox.remove();
+                            if (aliasBox) {
+                                aliasBox.parentNode.removeChild(aliasBox);
+                            }
                             
-                            // 2. Centrování a globální úprava fontu
+                            // 3. Centrování a nastavení šířky pro A4
                             const report = clonedDoc.getElementById('report-to-pdf');
-                            report.style.width = '700px';
+                            report.style.width = '100%';
+                            report.style.maxWidth = '750px';
                             report.style.margin = '0 auto';
-                            report.style.fontSize = '10.5px'; 
-                            report.style.lineHeight = '1.3';
+                            report.style.padding = '0 20px';
                             
-                            // 3. Extrémní redukce mezer pro vtěsnání na jednu stranu
+                            // 4. Vyčištění zbytků Tailwind spacingu
                             const pdfSpace = clonedDoc.querySelector('.pdf-space');
                             if (pdfSpace) {
                                 pdfSpace.classList.remove('space-y-10');
-                                pdfSpace.style.setProperty('gap', '0.75rem', 'important');
-                                pdfSpace.style.display = 'flex';
-                                pdfSpace.style.flexDirection = 'column';
+                                pdfSpace.style.gap = '8px';
                             }
-                            
-                            // 4. Zmenšení nadpisů a sekcí
-                            clonedDoc.querySelectorAll('section').forEach(s => s.style.marginBottom = '5px');
-                            clonedDoc.querySelectorAll('.section-content').forEach(c => {
-                                c.style.padding = '10px';
-                                c.style.borderRadius = '10px';
-                            });
-                            clonedDoc.querySelectorAll('h3').forEach(h => h.style.marginBottom = '5px');
-                            
-                            const mainTitle = clonedDoc.querySelector('.report-title');
-                            if (mainTitle) mainTitle.style.fontSize = '18px';
 
-                            // 5. Odstranění stínů a efektů
+                            // 5. Odstranění stínů, které dělají "mlhu"
                             clonedDoc.querySelectorAll('*').forEach(el => {
                                 el.style.boxShadow = 'none';
                                 el.style.transition = 'none';
                                 el.style.animation = 'none';
+                                el.style.borderColor = '#e2e8f0'; // Sjednocení linek
                             });
                         }
                     }, 
@@ -400,37 +404,17 @@
         const bootstrap = async () => {
             if (window.location.protocol === 'file:') {
                 const content = document.getElementById('content');
-                content.innerHTML = `
-                    <div class="text-center animate-fade-in py-10 px-4">
-                        <div class="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6"><i data-lucide="shield-alert" size="32"></i></div>
-                        <h2 class="text-xl font-bold text-slate-800 mb-2 font-poppins text-slate-900">Chyba protokolu</h2>
-                        <p class="text-xs text-slate-500 mb-6 leading-relaxed">Diagnostika vyžaduje webový server (http/https). Spusťte soubor přes Live Server nebo jej nahrajte na hosting.</p>
-                        <button onclick="window.location.reload()" class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-sm shadow-lg">Zkusit znovu</button>
-                    </div>`;
+                content.innerHTML = `<div class="text-center py-10 px-4"><div class="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6"><i data-lucide="shield-alert" size="32"></i></div><h2 class="text-xl font-bold text-slate-800 mb-2 font-poppins">Chyba protokolu</h2><p class="text-xs text-slate-500 mb-6">Diagnostika vyžaduje webový server (http/https).</p></div>`;
                 lucide.createIcons();
                 return;
             }
             const timeout = setTimeout(() => { if (!isUIReady) {
-                 const content = document.getElementById('content');
-                 content.innerHTML = `<div class="text-center p-8 text-slate-400 font-poppins">Spojení se servery Firebase vypršelo. Doména náhledu je pravděpodobně blokována.</div>`;
+                 document.getElementById('content').innerHTML = `<div class="text-center p-8 text-slate-400 font-poppins">Spojení vypršelo.</div>`;
             }}, 12000);
 
             onAuthStateChanged(auth, async (u) => {
-                if (u) {
-                    clearTimeout(timeout);
-                    user = u;
-                    await loadDraft();
-                } else {
-                    try {
-                        const cred = await signInAnonymously(auth);
-                        user = cred.user;
-                        clearTimeout(timeout);
-                        await loadDraft();
-                    } catch (err) {
-                        clearTimeout(timeout);
-                        console.error(err);
-                    }
-                }
+                if (u) { clearTimeout(timeout); user = u; await loadDraft(); }
+                else { try { const cred = await signInAnonymously(auth); user = cred.user; clearTimeout(timeout); await loadDraft(); } catch (err) { clearTimeout(timeout); } }
             });
         };
         window.onload = bootstrap;
