@@ -133,9 +133,9 @@
             document.getElementById('progress-bar').style.width = '0%';
             const content = document.getElementById('content');
             content.innerHTML = `
-                <div class="text-center animate-fade-in py-6">
+                <div class="text-center animate-fade-in py-6 text-slate-800">
                     <div class="w-16 h-16 sm:w-20 sm:h-20 bg-blue-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl"><i data-lucide="zap" size="36"></i></div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold mb-4 tracking-tight text-slate-800 font-poppins px-2 leading-tight">AI Maturity Index 360°</h1>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold mb-4 tracking-tight font-poppins px-2 leading-tight">AI Maturity Index 360°</h1>
                     <p class="text-slate-500 mb-10 text-sm px-6 leading-relaxed">Získejte hloubkovou analýzu své fáze adopce AI a osobní rozvojový plán pro příští kvartál. Váš postup se automaticky ukládá.</p>
                     <button id="start-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 font-poppins tracking-wide">Zahájit analýzu <i data-lucide="arrow-right"></i></button>
                 </div>`;
@@ -223,29 +223,29 @@
             document.getElementById('content').innerHTML = `
                 <div id="report-to-pdf" class="animate-fade-in bg-white p-2">
                     <!-- Header -->
-                    <div class="text-center mb-8 border-b pb-8 border-slate-100">
-                        <div class="inline-flex items-center justify-center w-14 h-14 bg-blue-50 text-blue-600 rounded-full mb-4 no-print"><i data-lucide="award" size="28"></i></div>
+                    <div class="text-center mb-8 border-b pb-8 border-slate-100 pdf-header">
+                        <div class="inline-flex items-center justify-center w-14 h-14 bg-blue-50 text-blue-600 rounded-full mb-4 no-print header-icon"><i data-lucide="award" size="28"></i></div>
                         <h2 class="text-slate-400 font-bold uppercase text-[9px] tracking-[0.3em] mb-1">Diagnostický Portrét</h2>
-                        <h1 class="text-2xl font-black text-slate-900 font-poppins leading-tight mb-2">${result.name}</h1>
-                        <p class="text-blue-600 font-bold text-xs uppercase tracking-widest">Index Adopce: ${totalPoints} / 48 bodů</p>
+                        <h1 class="text-2xl font-black text-slate-900 font-poppins leading-tight mb-2 report-title">${result.name}</h1>
+                        <p class="text-blue-600 font-bold text-xs uppercase tracking-widest score-text">Index Adopce: ${totalPoints} / 48 bodů</p>
                     </div>
 
-                    <div class="space-y-10">
+                    <div class="space-y-10 pdf-space">
                         <!-- Reality Check -->
                         <section>
-                            <h3 class="flex items-center gap-2 text-slate-900 font-bold text-xs uppercase tracking-wider mb-3 font-poppins">
-                                <i data-lucide="search" size="14" class="text-blue-500"></i> Pohled pod kapotu (Vaše realita)
+                            <h3 class="flex items-center gap-2 text-slate-900 font-bold text-xs uppercase tracking-wider mb-3 font-poppins section-title">
+                                <i data-lucide="search" size="14" class="text-blue-500 no-print"></i> Pohled pod kapotu (Vaše realita)
                             </h3>
-                            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 text-slate-700 text-sm leading-relaxed">${result.desc}</div>
+                            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 text-slate-700 text-sm leading-relaxed section-content">${result.desc}</div>
                         </section>
                         
                         <!-- Future Vision -->
-                        <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50">
+                        <section class="grid grid-cols-1 md:grid-cols-2 gap-4 vision-grid">
+                            <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50 vision-box">
                                 <h4 class="text-indigo-600 font-black uppercase text-[9px] mb-2 tracking-widest font-poppins text-center">Přínos posunu</h4>
                                 <p class="text-[11px] text-indigo-900 leading-relaxed">${result.whyMove}</p>
                             </div>
-                            <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100/50">
+                            <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100/50 vision-box">
                                 <h4 class="text-blue-600 font-black uppercase text-[9px] mb-2 tracking-widest font-poppins text-center">Vize Vašeho L+1</h4>
                                 <p class="text-[11px] text-blue-900 leading-relaxed">${result.nextDesc}</p>
                             </div>
@@ -253,10 +253,10 @@
 
                         <!-- Gap Analysis -->
                         <section>
-                            <h3 class="flex items-center gap-2 text-red-600 font-bold text-xs uppercase tracking-wider mb-3 font-poppins">
-                                <i data-lucide="target" size="14"></i> Priorita rozvoje: ${gapTip.name}
+                            <h3 class="flex items-center gap-2 text-red-600 font-bold text-xs uppercase tracking-wider mb-3 font-poppins section-title">
+                                <i data-lucide="target" size="14" class="no-print"></i> Priorita rozvoje: ${gapTip.name}
                             </h3>
-                            <div class="bg-red-50/50 p-5 rounded-2xl border border-red-100/50">
+                            <div class="bg-red-50/50 p-5 rounded-2xl border border-red-100/50 section-content">
                                 <p class="text-[11px] text-red-900 font-bold mb-2">${gapTip.desc}</p>
                                 <p class="text-[11px] text-red-800 leading-relaxed font-medium"><strong>Akce:</strong> ${gapTip.action}</p>
                             </div>
@@ -264,24 +264,24 @@
 
                         <!-- Detailed Action Plan -->
                         <section>
-                            <h3 class="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-wider mb-4 font-poppins">
-                                <i data-lucide="navigation-2" size="14"></i> Rozvojový plán pro příštích 30 dní
+                            <h3 class="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-wider mb-4 font-poppins section-title">
+                                <i data-lucide="navigation-2" size="14" class="no-print"></i> Rozvojový plán pro příštích 30 dní
                             </h3>
-                            <div class="space-y-3" id="dev-plan-container"></div>
+                            <div class="space-y-3 plan-container" id="dev-plan-container"></div>
                         </section>
 
                         <!-- Pro Tip Box -->
-                        <section id="ai-tip-section" class="bg-slate-900 text-white p-6 rounded-3xl shadow-xl overflow-hidden relative border border-slate-700">
+                        <section id="ai-tip-section" class="bg-slate-900 text-white p-6 rounded-3xl shadow-xl overflow-hidden relative border border-slate-700 tip-section">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-blue-400 font-bold text-[10px] uppercase flex items-center gap-2 font-poppins">
-                                    <i data-lucide="rocket" size="14"></i> AI Pro-Tip: Váš akcelerátor
+                                    <i data-lucide="rocket" size="14" class="no-print"></i> AI Pro-Tip: Váš akcelerátor
                                 </h3>
-                                <span class="text-[8px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full uppercase font-bold">Kopie promptu</span>
+                                <span class="text-[8px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full uppercase font-bold no-print">Kopie promptu</span>
                             </div>
-                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 font-mono text-[10px] text-blue-100 leading-relaxed select-all mb-4">
+                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 font-mono text-[10px] text-blue-100 leading-relaxed select-all mb-4 prompt-box">
                                 ${result.aiProTip}
                             </div>
-                            <div class="border-t border-slate-700/50 pt-4">
+                            <div class="border-t border-slate-700/50 pt-4 methodology-box">
                                 <h4 class="text-[9px] font-bold text-slate-400 uppercase mb-2">Metodika práce s tímto tipem:</h4>
                                 <p class="text-[10px] text-slate-300 leading-relaxed">${result.methodology}</p>
                             </div>
@@ -314,8 +314,8 @@
             const planContainer = document.getElementById('dev-plan-container');
             result.plan.forEach(item => {
                 const div = document.createElement('div');
-                div.className = "flex gap-4 items-start p-4 bg-white rounded-2xl border border-slate-100 shadow-sm";
-                div.innerHTML = `<div class="mt-1 text-emerald-500 bg-emerald-50 p-1.5 rounded-lg flex-shrink-0"><i data-lucide="check-circle-2" size="16"></i></div><div><h4 class="text-slate-900 font-bold text-xs mb-1 font-poppins">${item.title}</h4><p class="text-[11px] text-slate-500 leading-relaxed font-medium">${item.text}</p></div>`;
+                div.className = "flex gap-4 items-start p-4 bg-white rounded-2xl border border-slate-100 shadow-sm plan-item";
+                div.innerHTML = `<div class="mt-1 text-emerald-500 bg-emerald-50 p-1.5 rounded-lg flex-shrink-0 plan-icon"><i data-lucide="check-circle-2" size="16"></i></div><div><h4 class="text-slate-900 font-bold text-xs mb-1 font-poppins plan-title">${item.title}</h4><p class="text-[11px] text-slate-500 leading-relaxed font-medium plan-text">${item.text}</p></div>`;
                 planContainer.appendChild(div);
             });
 
@@ -337,16 +337,36 @@
             document.getElementById('download-pdf-btn').onclick = function() {
                 const element = document.getElementById('report-to-pdf');
                 html2pdf().set({ 
-                    margin: [15, 15, 15, 15], 
+                    margin: [10, 15, 10, 15], 
                     filename: 'AI_Maturity_Report.pdf', 
                     image: { type: 'jpeg', quality: 1.0 }, 
                     html2canvas: { 
-                        scale: 3, 
+                        scale: 2.5, 
                         useCORS: true, 
                         backgroundColor: '#ffffff',
                         onclone: (clonedDoc) => {
+                            // 1. Centrování a rozměry
+                            const report = clonedDoc.getElementById('report-to-pdf');
+                            report.style.width = '740px';
+                            report.style.margin = '0 auto';
+                            report.style.fontSize = '11.5px'; // Mírné zmenšení písma
+                            
+                            // 2. Kompletní odstranění Aliasu z PDF
                             const aliasBox = clonedDoc.getElementById('alias-box');
-                            if (aliasBox) aliasBox.style.display = 'none';
+                            if (aliasBox) aliasBox.remove();
+                            
+                            // 3. Kompaktnější mezery pro PDF
+                            const spaceDiv = clonedDoc.querySelector('.pdf-space');
+                            if (spaceDiv) {
+                                spaceDiv.classList.remove('space-y-10');
+                                spaceDiv.classList.add('space-y-5');
+                            }
+                            
+                            // 4. Úprava záhlaví
+                            const title = clonedDoc.querySelector('.report-title');
+                            if (title) title.style.fontSize = '20px';
+
+                            // 5. Vyčištění vizuálních artefaktů
                             clonedDoc.querySelectorAll('*').forEach(el => {
                                 el.style.boxShadow = 'none';
                                 el.style.transition = 'none';
