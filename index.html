@@ -18,18 +18,18 @@
         .option-card:active { transform: scale(0.98); background-color: #f8fafc; }
 
         /* Styly specifické pro PDF export - Extrémně kompaktní pro 1x A4 */
-        .pdf-mode { font-size: 9.5px !important; line-height: 1.1 !important; background: white !important; }
-        .pdf-mode h1 { font-size: 16px !important; margin-bottom: 2px !important; }
-        .pdf-mode h2 { font-size: 9px !important; margin-bottom: 1px !important; }
-        .pdf-mode h3 { font-size: 10px !important; margin-bottom: 3px !important; }
-        .pdf-mode section { margin-bottom: 4px !important; break-inside: avoid; }
-        .pdf-mode .bg-slate-50, .pdf-mode .bg-indigo-50\/50, .pdf-mode .bg-blue-50\/50, .pdf-mode .bg-red-50\/50 { padding: 6px 10px !important; border-radius: 8px !important; }
-        .pdf-mode .space-y-10 { gap: 0.2rem !important; display: flex; flex-direction: column; }
-        .pdf-mode #alias-box { display: none !important; visibility: hidden !important; height: 0 !important; margin: 0 !important; padding: 0 !important; border: none !important; }
+        .pdf-mode { font-size: 8.8px !important; line-height: 1.05 !important; background: white !important; }
+        .pdf-mode h1 { font-size: 15px !important; margin-bottom: 2px !important; }
+        .pdf-mode h2 { font-size: 8.5px !important; margin-bottom: 1px !important; }
+        .pdf-mode h3 { font-size: 9.5px !important; margin-bottom: 2px !important; }
+        .pdf-mode section { margin-bottom: 3px !important; break-inside: avoid; }
+        .pdf-mode .bg-slate-50, .pdf-mode .bg-indigo-50\/50, .pdf-mode .bg-blue-50\/50, .pdf-mode .bg-red-50\/50 { padding: 5px 8px !important; border-radius: 6px !important; }
+        .pdf-mode .space-y-10 { gap: 0.15rem !important; display: flex; flex-direction: column; }
+        .pdf-mode #alias-box { display: none !important; visibility: hidden !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
         .pdf-mode .no-print { display: none !important; }
-        .pdf-mode .plan-item { padding: 6px !important; gap: 6px !important; margin-bottom: 2px !important; }
-        .pdf-mode .prompt-box { padding: 6px !important; margin-bottom: 4px !important; }
-        .pdf-mode .vision-grid { gap: 8px !important; }
+        .pdf-mode .plan-item { padding: 4px 6px !important; gap: 4px !important; margin-bottom: 1px !important; }
+        .pdf-mode .prompt-box { padding: 4px 6px !important; margin-bottom: 2px !important; }
+        .pdf-mode .vision-grid { gap: 4px !important; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-2 sm:p-4 text-slate-900 text-sm">
@@ -51,7 +51,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- KONFIGURACE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyBmy6Wg2hgML35nbBqavkDDDV1aIZTCqsU",
             authDomain: "ai-diagnostika.firebaseapp.com",
@@ -103,18 +102,18 @@
         ];
 
         const categoryGapTips = {
-            "Nástroje a rutiny": { name: "Rozšíření arzenálu", desc: "Vaším největším prostorem pro růst je integrace AI do standardních workflow.", action: "Zaveďte pravidlo 'AI First'. Před každým úkolem se ptejte: Jak by mi s tímto mohl pomoci specializovaný model?" },
-            "Prompt Engineering": { name: "Mistrovství komunikace", desc: "Vaše zadání postrádají hloubkový kontext. AI pak hádá a vy musíte výstupy příliš opravovat.", action: "Naučte se rámec R-U-F (Role, Úkol, Formát). Více s AI iterujte skrze doplňující dotazy." },
-            "Strategie a bezpečnost": { name: "Kritický odstup", desc: "Riskujete v oblasti bezpečnosti dat a slepé důvěry v halucinace.", action: "Nastavte proces křížové validace a důsledně anonymizujte firemní data před vložením." },
-            "Tým a budoucnost": { name: "Sdílení a transformace", desc: "AI používáte dobře individuálně, ale chybí systémové multiplikování know-how.", action: "Založte sdílenou knihovnu promptů a staňte se interním mentorem pro tým." }
+            "Nástroje a rutiny": { name: "Strategická integrace", desc: "Vaším největším prostorem pro růst je přestat vnímat AI jako 'boxík bokem' a začít ji vnímat jako základní stavební kámen každého workflow.", action: "Zaveďte pravidlo 'AI First'. Před každým novým úkolem si dejte 30 sekund na úvahu: Jak by mi s tímto mohl pomoci specializovaný model?" },
+            "Prompt Engineering": { name: "Sémantické mistrovství", desc: "Vaše zadání jsou pravděpodobně příliš stručná, což nutí AI hádat a halucinovat. Chybí vám hloubkový kontext a definice role.", action: "Přejděte na strukturu R-U-F-K (Role, Úkol, Formát, Kontext). Naučte se AI zadávat příklady ideálního výsledku (Few-shot prompting)." },
+            "Strategie a bezpečnost": { name: "Řízení rizik a etika", desc: "Riskujete buď v oblasti slepé důvěry v halucinace, nebo v úniku citlivých dat skrze nezabezpečené nástroje.", action: "Nastavte proces křížové validace výstupů a začněte využívat výhradně Enterprise prostředí s garantovaným soukromím dat." },
+            "Tým a budoucnost": { name: "Sdílení a multiplikace", desc: "AI používáte dobře individuálně, ale vaše hodnota pro firmu neroste, protože know-how zůstává uzavřené ve vaší hlavě.", action: "Založte sdílenou knihovnu promptů a staňte se interním evangelistou. Jeden váš úspěšný postup ušetří stovky hodin celému týmu." }
         };
 
         const levels = [
-            { min: 0, max: 8, key: 'A', name: "L0: Pozorovatel na startu", desc: "AI vnímáte jako vnější technologický fenomén. Zatím vyčkáváte, zatímco svět kolem zrychluje. Aktuálně riskujete, že tradiční postupy, na které spoléháte, se stanou neúměrně drahými z hlediska času i energie.", whyMove: "Odbourání mentálních bloků a získání první skutečné zkušenosti s okamžitým výsledkem.", nextDesc: "Přejdete do fáze aktivního experimentování, kde AI přestane být tématem zpráv a stane se vaším osobním asistentem.", plan: [{ title: "Demystifikace", text: "Zkuste AI pro banální úkoly: nechte ji napsat osnovu e-mailu nebo recept z ingrediencí v lednici." }, { title: "Mobilní impuls", text: "Nainstalujte si mobilní aplikaci a ptejte se hlasem. Zjistíte, že AI je k dispozici 24/7." }], aiProTip: "Zadejte chatbotovi: 'Jsem začátečník. Navrhni mi 3 způsoby, jak mi ušetřit 5 minut denně.'", methodology: "Cílem není dokonalost, ale zvyk. Stačí jeden úspěšný dotaz denně, aby se mozek přepnul do režimu spolupráce s technologií." },
-            { min: 9, max: 18, key: 'B', name: "L1: Experimentátor (Ad-hoc)", desc: "AI už znáte, ale používáte ji nahodile jako lepší Google. Chybí vám systém – občas dostanete skvělý výsledek, jindy jste frustrováni. AI pro vás stále není standard, ale zajímavý doplněk, na který si vzpomenete až v nouzi.", whyMove: "Získání předvídatelnosti. Přestanete s AI 'bojovat' a začnete ji skutečně řídit skrze správná zadání.", nextDesc: "Stanete se pokročilým uživatelem, který má pro vybrané úkoly vyvinuté vlastní, spolehlivé postupy.", plan: [{ title: "Rámec zadání", text: "Začněte používat strukturu: ROLE - ÚKOL - FORMÁT. Uvidíte okamžitý skok v kvalitě." }, { title: "Audit rutin", text: "Vyberte 1 činnost týdně a slibte si, že ji 14 dní budete dělat výhradně s pomocí AI." }], aiProTip: "Prompt: 'Mám tendenci ti dávat krátká zadání. Nyní ti napíšu úkol a ty mi navrhni parametry pro nejlepší výsledek.'", methodology: "Nekopírujte slepě. Vnímejte AI jako juniorního kolegu, který potřebuje přesnou supervizi." },
-            { min: 19, max: 29, key: 'C', name: "L2: Pokročilý uživatel (Utility)", desc: "AI používáte denně a šetříte hodiny času. Pastí této úrovně je 'falešná produktivita' – děláte staré věci jen o něco rychleji. Stále pracujete na úrovni zadávání úkolů, místo abyste transformovali celé procesy.", whyMove: "Přerod v architekta práce. Přestanete jen delegovat úkoly a začnete delegovat celé rozhodovací procesy.", nextDesc: "Dostanete se na úroveň Stratéga, který dříve než začne pracovat, přemýšlí, jak celý úkol odbavit bez manuálního zásahu.", plan: [{ title: "Custom Instructions", text: "Nastavte si v AI trvalé preference. AI vás přestane zdravit a začne rovnou pracovat." }, { title: "Oponentura", text: "Chtějte od AI kritiku vašich nápadů a hledání slabých míst v projektech." }], aiProTip: "Prompt: 'Navrhni mi 5 radikálních způsobů, jak tento proces transformovat tak, aby zabral o 80 % méně mého času.'", methodology: "Hledejte 'Páku'. Jeden nastavený agent vám ušetří týdny práce. Soustřeďte se na multiplicitu." },
-            { min: 30, max: 40, key: 'D', name: "L3: Strategický lídr (Leverage)", desc: "Rozumíte pákám a multiplikujete svůj vliv. AI je váš partner a inovátor. Jste vzorem pro okolí, ale možná narážíte na to, že systém kolem vás se mění pomaleji než vy sami.", whyMove: "Plná integrace a společenský dopad. L4 je o absolutní svobodě a nastavení nových standardů v oboru.", nextDesc: "Stanete se AI Integrátorem (Maestrem), který buduje celé AI ekosystémy pro ostatní v organizaci.", plan: [{ title: "Knihovna agentů", text: "Vytvořte si agenty (Custom GPTs) pro specifické expertízy – od copywritera po právního oponenta." }, { title: "Mentoring", text: "Učte ostatní. Vysvětlováním postupů týmu se sami nejrychleji posunete k hloubkovému pochopení." }], aiProTip: "Prompt: 'Pomoz mi navrhnout plán, jak překonat rezistenci a zvýšit efektivitu týmu o 50 % za kvartál.'", methodology: "Vaším úkolem je řízení kvality a vize. AI neřeší 'jak', ale odbavuje 'co'. Vy určujete strategické 'proč'." },
-            { min: 41, max: 48, key: 'E', name: "L4: AI Integrátor & Maestro", desc: "AI je součástí vašeho myšlení. Netransformujete jen své úkoly, ale celé systémy. Vaše hodnota spočívá v empatii, etice a kurátorství vizí, které algoritmy neumí.", whyMove: "Inovace na samé hraně možného a definice budoucnosti práce pro příští dekádu.", nextDesc: "Vstoupíte do sféry 'Systémové autonomie', kde procesy běží samy a vy investujete čas do hloubkových vztahů.", plan: [{ title: "API Integrace", text: "Propojte AI přímo s datovými toky skrze Make/Zapier. AI musí 'žít' v datech, ne v prohlížeči." }, { title: "Human Focus", text: "Uvolněný čas investujte do mentálního zdraví týmu a strategických vztahů." }], aiProTip: "Prompt: 'Navrhni architekturu autonomního systému pro monitoring [parametr] s automatickými doporučeními.'", methodology: "Udržujte si kritický odstup. Čím více je systém autonomní, tím více potřebuje vaši morální a strategickou kotvu." }
+            { min: 0, max: 8, key: 'A', name: "L0: Pozorovatel na startu", desc: "AI vnímáte jako technologický šum, který se vás přímo netýká. Zatím vyčkáváte na 'ten správný moment', zatímco trh a tempo světa kolem vás exponenciálně zrychluje. Aktuálně riskujete, že tradiční postupy, na které spoléháte, se stanou neudržitelně drahými z hlediska času i mentální kapacity.", whyMove: "Odbourání bariér a získání první skutečné zkušenosti s pákovým efektem okamžitého výsledku.", nextDesc: "Přejdete do fáze experimentování, kde AI přestane být tématem zpráv a stane se vaším osobním pomocníkem.", plan: [{ title: "Demystifikace", text: "Zkuste AI pro banální, otravné úkoly: nechte ji napsat osnovu e-mailu nebo recept z ingrediencí v lednici." }, { title: "Mobilní impuls", text: "Nainstalujte si mobilní aplikaci ChatGPT a začněte se jí ptát hlasem na věci, které byste jinak museli hledat." }, { title: "Informační hygiena", text: "Sledujte jeden kvalitní AI newsletter týdně, abyste pochopili reálné příklady z vaší praxe." }], aiProTip: "Zadejte chatbotovi: 'Jsem začátečník. Navrhni mi 3 způsoby, jak mi můžeš v mé profesi [vaše práce] ušetřit 5 minut denně bez složitého nastavování.'", methodology: "Cílem L0 není mistrovství, ale zvyk. Stačí jeden dotaz denně. Vnímejte AI jako vyhledávač, se kterým si můžete povídat." },
+            { min: 9, max: 18, key: 'B', name: "L1: Experimentátor (Ad-hoc)", desc: "AI už znáte a občas ji použijete, ale děláte to nahodile jako s lepším Googlem. Chybí vám systém a predikovatelnost – občas dostanete skvělý výsledek, jindy jste frustrováni z nesmyslů. AI pro vás stále není standard, ale zajímavý doplněk, na který si vzpomenete až v momentě, kdy jste v úzkých.", whyMove: "Získání předvídatelnosti a kontroly. Přestanete s AI 'bojovat' a začnete ji skutečně řídit skrze precizní zadání.", nextDesc: "Stanete se uživatelem, který má pro vybrané úkoly vyvinuté vlastní, spolehlivé postupy a šetří hodiny času týdně.", plan: [{ title: "Rámec zadání", text: "Začněte používat strukturu: ROLE - KONTEXT - ÚKOL - FORMÁT. Kvalita výstupů okamžitě vzroste o 100 %." }, { title: "Audit rutin", text: "Vyberte 1 činnost týdně a slibte si, že ji 14 dní budete dělat výhradně s pomocí AI (např. zápisy z porad)." }, { title: "Feedback loop", text: "Ptejte se AI: 'Jaké informace ti chybí, abys mi mohl dát lepší výsledek?' Učíte se tak v reálném čase." }], aiProTip: "Použijte tento prompt: 'Zde je můj úkol: [text]. Než ho začneš plnit, navrhni mi 5 parametrů nebo kontextových bodů, které bych měl doplnit, abys mi dal nejlepší výsledek.'", methodology: "Vnímejte AI jako juniorního kolegu. Je rychlý, ale potřebuje přesnou supervizi. Každý výstup berte jako polotovar k vaší editaci." },
+            { min: 19, max: 29, key: 'C', name: "L2: Pokročilý uživatel (Utility)", desc: "AI používáte denně a šetříte hodiny času. Hlavní pastí této úrovně je 'falešná produktivita' – děláte staré věci jen o něco rychleji, ale netransformujete svou roli. Stále pracujete na úrovni zadávání úkolů, místo abyste delegovali celé rozhodovací procesy. AI je váš kopilot, ale vy stále držíte knipl příliš křečovitě.", whyMove: "Přerod v architekta práce. Přestanete jen delegovat exekutivu a začnete delegovat celé analytické procesy.", nextDesc: "Dostanete se na úroveň Stratéga, který dříve než začne pracovat, přemýšlí, jak celý úkol odbavit zcela bez manuálního zásahu.", plan: [{ title: "Custom Instructions", text: "Nastavte si v AI trvalé preference o vaší roli, stylu a cílech. AI vás přestane zdravit a začne hned doručením." }, { title: "Oponentura vizí", text: "Chtějte od AI kritiku vašich nápadů, hledání slabých míst v projektech a simulaci pohledu klienta." }, { title: "Strukturální delegování", text: "Vytvořte si procesní mapu své práce a identifikujte, které 3 procesy lze automatizovat pomocí Custom GPTs." }], aiProTip: "Zkuste: 'Zde je můj workflow pro [aktivita]. Navrhni mi 5 radikálních způsobů, jak tento proces transformovat tak, aby mi zabral o 80 % méně času, zatímco kvalita zůstane zachována.'", methodology: "Hledejte 'Páku'. Jeden dobře nastavený agent nebo systém instrukcí vám ušetří týdny práce ročně. Soustřeďte se na multiplicitu a přestaňte 'ťukat' dotazy ručně." },
+            { min: 30, max: 40, key: 'D', name: "L3: Strategický lídr (Leverage)", desc: "Rozumíte pákám a multiplikujete svůj vliv díky technologii. AI je váš partner a oponent. Jste vzorem pro okolí, ale možná narážíte na to, že systém kolem vás se mění pomaleji než vy sami. Vaší hodnotou už není to, co vytvoříte vlastníma rukama, ale jaké vize a standardy díky AI kurátorujete.", whyMove: "Plná integrace a hluboký společenský dopad. L4 je o absolutní svobodě od exekutivy a nastavení nových standardů.", nextDesc: "Stanete se AI Integrátorem (Maestrem), který netvoří jen pro sebe, ale buduje komplexní AI ekosystémy pro celou organizaci.", plan: [{ title: "Knihovna agentů", text: "Vytvořte si sadu specializovaných agentů (Custom GPTs) pro specifické expertízy vaší značky nebo oddělení." }, { title: "ROI Audit", text: "Začněte měřit přínos AI v ušetřených hodinách a penězích. Použijte tato data k obhajobě investic do technologií." }, { title: "Mentoring týmu", text: "Učte ostatní své postupy. Tím, že budete vysvětlovat své strategické zadávání, se sami nejrychleji posunete k hluboké vizi." }], aiProTip: "Transformační prompt: 'Pomoz mi navrhnout strategický plán, jak v mém oddělení překonat rezistenci a zvýšit efektivitu o 50 % za kvartál. Identifikuj bariéry a navrhni řešení.'", methodology: "Vaším úkolem je řízení kvality, etiky a vize. AI neřeší 'jak', ale odbavuje 'co'. Vy určujete strategické 'proč'. Jste architektem hodnoty." },
+            { min: 41, max: 48, key: 'E', name: "L4: AI Integrátor & Maestro", desc: "AI je organickou součástí vašeho myšlení. Netransformujete jen své úkoly, ale celé systémy a odvětví. Vaše hodnota spočívá v empatii, etice a kurátorství vizí, které algoritmy neumí. Dosáhli jste stavu, kdy technologie 'zmizela' a zbyl jen čistý vliv. Jste pionýrem nové éry práce.", whyMove: "Inovace na samé hraně možného a definice budoucnosti lidské práce pro příští dekádu.", nextDesc: "Vstoupíte do sféry 'Systémové autonomie', kde procesy běží samy a vy investujete čas do hloubkových mezilidských vztahů.", plan: [{ title: "API Integrace", text: "Propojte AI přímo s datovými toky skrze automatizační nástroje. AI musí 'žít' v datech, ne v prohlížeči." }, { title: "Human-Centric Focus", text: "Až 50 % své kapacity investujte do mentálního zdraví týmu a strategických vztahů, které jsou AI nenahraditelné." }, { title: "Etický framework", text: "Vytvořte ve firmě standardy pro bezpečné a etické využívání AI, abyste chránili integritu vaší práce." }], aiProTip: "Vizí vedený prompt: 'Navrhni architekturu autonomního systému pro monitoring trhu [váš obor], který automaticky generuje doporučení pro vedení, zatímco já se soustředím na vizi.'", methodology: "Udržujte si kritický odstup. Čím více je systém autonomní, tím více potřebuje vaši morální a strategickou kotvu. Vy jste strážcem smyslu a lidskosti." }
         ];
 
         // --- CORE LOGIKA ---
@@ -149,7 +148,7 @@
                 <div class="text-center animate-fade-in py-6 text-slate-800">
                     <div class="w-16 h-16 sm:w-20 sm:h-20 bg-blue-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl"><i data-lucide="zap" size="36"></i></div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold mb-4 tracking-tight font-poppins px-2 leading-tight">AI Maturity Index 360°</h1>
-                    <p class="text-slate-500 mb-10 text-sm px-6 leading-relaxed">Získejte hloubkovou analýzu své fáze adopce AI a osobní rozvojový plán pro příští kvartál. Váš postup se automaticky ukládá.</p>
+                    <p class="text-slate-500 mb-10 text-sm px-6 leading-relaxed">Získejte hloubkovou analýzu své fáze adopce AI a rozvojový plán pro příští kvartál. Váš postup se automaticky ukládá.</p>
                     <button id="start-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 font-poppins tracking-wide">Zahájit analýzu <i data-lucide="arrow-right"></i></button>
                 </div>`;
             lucide.createIcons();
@@ -183,8 +182,8 @@
                 <div class="animate-fade-in flex flex-col h-full text-slate-800">
                     <div class="flex justify-between items-center mb-6">
                         <span class="text-[9px] font-black uppercase tracking-widest text-${config.color}-600 bg-${config.color}-50 px-3 py-1 rounded-full">${q.cat}</span>
-                        <div class="flex items-center gap-3">
-                            ${(currentIdx > 0 && history.length > 0) ? `<button id="back-btn" class="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-[9px] font-bold uppercase"><i data-lucide="arrow-left" size="12"></i> Zpět</button>` : ''}
+                        <div class="flex items-center gap-3 text-slate-400">
+                            ${(currentIdx > 0 && history.length > 0) ? `<button id="back-btn" class="hover:text-slate-600 flex items-center gap-1 text-[9px] font-bold uppercase"><i data-lucide="arrow-left" size="12"></i> Zpět</button>` : ''}
                             <span class="text-[9px] font-bold text-slate-300 uppercase font-mono">${currentIdx + 1} / ${questions.length}</span>
                         </div>
                     </div>
@@ -236,14 +235,14 @@
             document.getElementById('content').innerHTML = `
                 <div id="report-to-pdf" class="animate-fade-in bg-white p-2">
                     <!-- Header -->
-                    <div class="text-center mb-8 border-b pb-8 border-slate-100 pdf-header">
+                    <div class="text-center mb-8 border-b pb-8 border-slate-100 pdf-header text-slate-900">
                         <div class="inline-flex items-center justify-center w-14 h-14 bg-blue-50 text-blue-600 rounded-full mb-4 no-print header-icon"><i data-lucide="award" size="28"></i></div>
                         <h2 class="text-slate-400 font-bold uppercase text-[9px] tracking-[0.3em] mb-1">Diagnostický Portrét</h2>
                         <h1 class="text-2xl font-black text-slate-900 font-poppins leading-tight mb-2 report-title">${result.name}</h1>
                         <p class="text-blue-600 font-bold text-xs uppercase tracking-widest score-text">Index Adopce: ${totalPoints} / 48 bodů</p>
                     </div>
 
-                    <div class="space-y-10 pdf-space">
+                    <div class="space-y-10 pdf-space text-slate-800">
                         <!-- Reality Check -->
                         <section class="section-Reality">
                             <h3 class="flex items-center gap-2 text-slate-900 font-bold text-xs uppercase tracking-wider mb-3 font-poppins section-title">
@@ -280,7 +279,7 @@
                             <h3 class="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-wider mb-4 font-poppins section-title">
                                 <i data-lucide="navigation-2" size="14" class="no-print"></i> Rozvojový plán pro příštích 30 dní
                             </h3>
-                            <div class="space-y-3 plan-container" id="dev-plan-container"></div>
+                            <div class="space-y-3 plan-container text-slate-800" id="dev-plan-container"></div>
                         </section>
 
                         <!-- Pro Tip Box -->
@@ -300,7 +299,7 @@
                             </div>
                         </section>
 
-                        <!-- Reveal Alias (NA KONCI - V PDF SE NESMÍ ZOBRAZIT) -->
+                        <!-- Reveal Alias (Úplný konec) -->
                         <section id="alias-box" class="p-8 border-2 border-dashed border-slate-200 rounded-[2.5rem] bg-slate-50/50 text-center transition-all mt-12 no-print">
                              <p class="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-4 italic">Tento box nechte zavřený do pokynu lektora</p>
                              <div id="alias-locked" class="py-4">
@@ -312,7 +311,7 @@
                                 </div>
                                 <div id="alias-name" class="hidden animate-fade-in">
                                     <p class="text-[10px] text-blue-500 font-bold uppercase mb-1">Vaše identita je:</p>
-                                    <span class="text-3xl font-black text-blue-600 uppercase tracking-tighter">${alias}</span>
+                                    <span class="text-3xl font-black text-blue-600 uppercase tracking-tighter font-poppins">${alias}</span>
                                 </div>
                              </div>
                         </section>
@@ -350,42 +349,37 @@
             document.getElementById('download-pdf-btn').onclick = function() {
                 const element = document.getElementById('report-to-pdf');
                 html2pdf().set({ 
-                    margin: [8, 10, 10, 10], 
+                    margin: [5, 10, 5, 10], 
                     filename: 'AI_Maturity_Report.pdf', 
                     image: { type: 'jpeg', quality: 1.0 }, 
+                    pagebreak: { mode: 'avoid-all' }, 
                     html2canvas: { 
                         scale: 3, 
                         useCORS: true, 
                         backgroundColor: '#ffffff',
                         onclone: (clonedDoc) => {
-                            // 1. Aktivace PDF módu
                             const cloneBody = clonedDoc.body;
                             cloneBody.classList.add('pdf-mode');
-                            
-                            // 2. ÚPLNÉ odstranění alias boxu z DOMu klonu
                             const aliasBox = clonedDoc.getElementById('alias-box');
-                            if (aliasBox) aliasBox.parentNode.removeChild(aliasBox);
-                            
-                            // 3. Odstranění spodních mezer z posledního boxu
-                            const tipSection = clonedDoc.getElementById('ai-tip-section');
-                            if (tipSection) tipSection.style.marginBottom = '0px';
-                            
-                            // 4. Centrování a nastavení šířky pro A4
+                            if (aliasBox) aliasBox.remove();
                             const report = clonedDoc.getElementById('report-to-pdf');
                             report.style.width = '100%';
                             report.style.maxWidth = '750px';
                             report.style.margin = '0 auto';
                             report.style.padding = '0 15px';
-                            report.style.height = 'auto';
-                            
-                            // 5. Agresivní redukce mezer pro vtěsnání na jednu stranu
+                            report.style.height = '275mm';
+                            report.style.maxHeight = '275mm';
+                            report.style.overflow = 'hidden';
                             const pdfSpace = clonedDoc.querySelector('.pdf-space');
                             if (pdfSpace) {
                                 pdfSpace.classList.remove('space-y-10');
-                                pdfSpace.style.gap = '5px';
+                                pdfSpace.style.gap = '3px';
                             }
-
-                            // 6. Odstranění stínů a vizuálního šumu
+                            const tipSection = clonedDoc.getElementById('ai-tip-section');
+                            if (tipSection) {
+                                tipSection.style.marginBottom = '0px';
+                                tipSection.style.paddingBottom = '0px';
+                            }
                             clonedDoc.querySelectorAll('*').forEach(el => {
                                 el.style.boxShadow = 'none';
                                 el.style.transition = 'none';
@@ -409,12 +403,12 @@
         const bootstrap = async () => {
             if (window.location.protocol === 'file:') {
                 const content = document.getElementById('content');
-                content.innerHTML = `<div class="text-center py-10 px-4"><div class="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6"><i data-lucide="shield-alert" size="32"></i></div><h2 class="text-xl font-bold text-slate-800 mb-2 font-poppins">Chyba protokolu</h2><p class="text-xs text-slate-500 mb-6">Diagnostika vyžaduje webový server (http/https).</p></div>`;
+                content.innerHTML = `<div class="text-center py-10 px-4 text-slate-800"><div class="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6"><i data-lucide="shield-alert" size="32"></i></div><h2 class="text-xl font-bold mb-2 font-poppins">Chyba protokolu</h2><p class="text-xs text-slate-500 mb-6 leading-relaxed">Diagnostika vyžaduje webový server (http/https).</p></div>`;
                 lucide.createIcons();
                 return;
             }
             const timeout = setTimeout(() => { if (!isUIReady) {
-                 document.getElementById('content').innerHTML = `<div class="text-center p-8 text-slate-400 font-poppins">Spojení vypršelo.</div>`;
+                 document.getElementById('content').innerHTML = `<div class="text-center p-8 text-slate-400 font-poppins">Spojení se servery Firebase vypršelo.</div>`;
             }}, 12000);
 
             onAuthStateChanged(auth, async (u) => {
