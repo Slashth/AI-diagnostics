@@ -18,15 +18,16 @@
         .option-card:active { transform: scale(0.98); background-color: #f8fafc; }
 
         /* Styly specifické pro PDF export */
-        .pdf-mode { font-size: 10px !important; line-height: 1.2 !important; }
+        .pdf-mode { font-size: 10px !important; line-height: 1.15 !important; background: white !important; }
         .pdf-mode h1 { font-size: 18px !important; margin-bottom: 4px !important; }
         .pdf-mode h2 { font-size: 10px !important; margin-bottom: 2px !important; }
         .pdf-mode h3 { font-size: 11px !important; margin-bottom: 4px !important; }
-        .pdf-mode section { margin-bottom: 8px !important; break-inside: avoid; }
-        .pdf-mode .bg-slate-50, .pdf-mode .bg-indigo-50\/50, .pdf-mode .bg-blue-50\/50, .pdf-mode .bg-red-50\/50 { padding: 10px !important; border-radius: 8px !important; }
-        .pdf-mode .space-y-10 { gap: 0.5rem !important; display: flex; flex-direction: column; }
-        .pdf-mode #alias-box { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; }
+        .pdf-mode section { margin-bottom: 6px !important; break-inside: avoid; }
+        .pdf-mode .bg-slate-50, .pdf-mode .bg-indigo-50\/50, .pdf-mode .bg-blue-50\/50, .pdf-mode .bg-red-50\/50 { padding: 8px !important; border-radius: 8px !important; }
+        .pdf-mode .space-y-10 { gap: 0.4rem !important; display: flex; flex-direction: column; }
+        .pdf-mode #alias-box { display: none !important; visibility: hidden !important; height: 0 !important; margin: 0 !important; padding: 0 !important; border: none !important; }
         .pdf-mode .no-print { display: none !important; }
+        .pdf-mode .plan-item { padding: 8px !important; gap: 8px !important; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-2 sm:p-4 text-slate-900 text-sm">
@@ -355,36 +356,34 @@
                         useCORS: true, 
                         backgroundColor: '#ffffff',
                         onclone: (clonedDoc) => {
-                            // 1. Aplikace PDF módu na tělo klonu
+                            // 1. Aktivace PDF módu
                             const cloneBody = clonedDoc.body;
                             cloneBody.classList.add('pdf-mode');
                             
-                            // 2. ABSOLUTNÍ odstranění alias boxu
+                            // 2. ÚPLNÉ odstranění alias boxu z DOMu klonu
                             const aliasBox = clonedDoc.getElementById('alias-box');
-                            if (aliasBox) {
-                                aliasBox.parentNode.removeChild(aliasBox);
-                            }
+                            if (aliasBox) aliasBox.parentNode.removeChild(aliasBox);
                             
-                            // 3. Centrování a nastavení šířky pro A4
+                            // 3. Odstranění všech prázdných uzlů a mezer na konci dokumentu
                             const report = clonedDoc.getElementById('report-to-pdf');
                             report.style.width = '100%';
                             report.style.maxWidth = '750px';
                             report.style.margin = '0 auto';
                             report.style.padding = '0 20px';
+                            report.style.height = 'auto';
                             
-                            // 4. Vyčištění zbytků Tailwind spacingu
+                            // 4. Agresivní redukce mezer pro vtěsnání na jednu stranu
                             const pdfSpace = clonedDoc.querySelector('.pdf-space');
                             if (pdfSpace) {
                                 pdfSpace.classList.remove('space-y-10');
-                                pdfSpace.style.gap = '8px';
+                                pdfSpace.style.gap = '6px';
                             }
 
-                            // 5. Odstranění stínů, které dělají "mlhu"
+                            // 5. Odstranění stínů a vizuálního šumu
                             clonedDoc.querySelectorAll('*').forEach(el => {
                                 el.style.boxShadow = 'none';
                                 el.style.transition = 'none';
                                 el.style.animation = 'none';
-                                el.style.borderColor = '#e2e8f0'; // Sjednocení linek
                             });
                         }
                     }, 
