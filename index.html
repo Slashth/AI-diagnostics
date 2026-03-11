@@ -24,7 +24,7 @@
         <div class="h-1.5 w-full bg-slate-100">
             <div id="progress-bar" class="h-full bg-blue-600 transition-all duration-500" style="width: 0%;"></div>
         </div>
-        <div id="content" class="p-6 sm:p-8 md:p-10 flex-grow flex flex-col overflow-y-auto max-h-[92vh] scrollbar-hide text-slate-800">
+        <div id="content" class="p-6 sm:p-8 md:p-10 flex-grow flex flex-col overflow-y-auto max-h-[92vh] scrollbar-hide text-slate-800 text-sm">
             <div id="loading-spinner" class="flex flex-col items-center justify-center h-64 gap-4">
                 <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 <p class="text-slate-400 text-[10px] font-bold animate-pulse uppercase tracking-widest text-center font-poppins">Navazování spojení...</p>
@@ -79,7 +79,7 @@
             { cat: "Prompt Engineering", text: "Používáte Custom Instructions nebo agenty?", options: [{text:"Ne",p:0},{text:"Vím o tom, nemám nastaveno",p:1},{text:"Mám základní nastavení",p:2},{text:"Mám knihovnu agentů",p:3}]},
             { cat: "Strategie a bezpečnost", text: "Jak vnímáte AI ve svém tvůrčím procesu?", options: [{text:"Jako hrozbu",p:0},{text:"Jako vyhledávač",p:1},{text:"Jako asistenta",p:2},{text:"Jako sparing partnera",p:3}]},
             { cat: "Strategie a bezpečnost", text: "Dokážete identifikovat úkoly, kde AI nesmí být použita?", options: [{text:"Používám ji na vše",p:0},{text:"Nějak intuitivně to cítím",p:1},{text:"Mám jasné hranice",p:2},{text:"Mám etický rámec",p:3}]},
-            { cat: "Strategie a bezpečnost", text: "Jak postupujete při ověřování chyb?", options: [{text:"Věřím AI",p:0},{text:"Zkontroluji zásadní věci",p:1},{text:"Vše ověřuji externě",p:2},{text:"Validace je součástí workflow",p:3}]},
+            { cat: "Strategie a bezpečnost", text: "Jak postupujete při ověřování chyb?", options: [{text:"Věřím AI",p:0},{text:"Zkontroluji jen zásadní věci",p:1},{text:"Vše ověřuji externě",p:2},{text:"Validace je součástí workflow",p:3}]},
             { cat: "Strategie a bezpečnost", text: "Jak řešíte citlivá firemní data?", options: [{text:"Vkládám tam vše",p:0},{text:"Snažím se být opatrný/á",p:1},{text:"Anonymizuji",p:2},{text:"Enterprise prostředí",p:3}]},
             { cat: "Tým a budoucnost", text: "Sdílíte své postupy s kolegy?", options: [{text:"Ne",p:0},{text:"Občas něco pošlu",p:1},{text:"Společný kanál",p:2},{text:"Firemní knihovna",p:3}]},
             { cat: "Tým a budoucnost", text: "Pomáháte ostatním v týmu s adopcí?", options: [{text:"Ne",p:0},{text:"Když se mě někdo zeptá",p:1},{text:"Aktivně ukazuji tipy",p:2},{text:"Interní mentor",p:3}]},
@@ -95,19 +95,6 @@
             { min: 41, max: 48, key: 'E', name: "L4: AI Integrátor & Maestro", desc: "AI je organickou součástí vašeho myšlení. Transformujete systémy.", whyMove: "Vize budoucnosti oboru.", nextDesc: "Systémová autonomie.", plan: [{ title: "API integrace", text: "Propojte AI s datovými toky skrze agenty." }], aiProTip: "Strategie: 'Jak posunout 80 % týmu z L1 na L3?'" }
         ];
 
-        function renderError(msg, isFileError = false) {
-            const content = document.getElementById('content');
-            content.innerHTML = `
-                <div class="text-center animate-fade-in py-10 px-4">
-                    <div class="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6"><i data-lucide="shield-alert" size="32"></i></div>
-                    <h2 class="text-xl font-bold text-slate-800 mb-2 font-poppins">${isFileError ? 'Chyba protokolu' : 'Spojení se nezdařilo'}</h2>
-                    <p class="text-xs text-slate-500 mb-6 leading-relaxed">${msg}</p>
-                    <div class="bg-slate-50 border p-4 rounded-xl mb-6 text-[10px] break-all font-mono">${window.location.origin}</div>
-                    <button onclick="window.location.reload()" class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-sm shadow-lg">Zkusit znovu</button>
-                </div>`;
-            lucide.createIcons();
-        }
-
         async function saveDraft() {
             if (!user) return;
             try {
@@ -119,8 +106,7 @@
         async function loadDraft() {
             if (!user) return;
             try {
-                const draftRef = doc(db, 'artifacts', internalAppId, 'users', user.uid, 'draft', 'progress');
-                const snap = await getDoc(draftRef);
+                const snap = await getDoc(doc(db, 'artifacts', internalAppId, 'users', user.uid, 'draft', 'progress'));
                 if (snap.exists()) {
                     const d = snap.data();
                     currentIdx = d.currentIdx || 0;
@@ -140,7 +126,7 @@
                 <div class="text-center animate-fade-in py-6">
                     <div class="w-16 h-16 sm:w-20 sm:h-20 bg-blue-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl"><i data-lucide="zap" size="36"></i></div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold mb-4 tracking-tight text-slate-800 font-poppins">AI Maturity Index 360°</h1>
-                    <p class="text-slate-500 mb-10 text-sm px-4">Komplexní analýza vaší fáze adopce AI. Váš rozpracovaný postup se automaticky ukládá.</p>
+                    <p class="text-slate-500 mb-10 text-sm px-4 leading-relaxed">Komplexní analýza vaší fáze adopce AI. Váš postup se automaticky ukládá.</p>
                     <button id="start-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 font-poppins">Spustit diagnostiku <i data-lucide="arrow-right"></i></button>
                 </div>`;
             lucide.createIcons();
@@ -155,7 +141,7 @@
                 <div class="text-center animate-fade-in py-8">
                     <div class="w-16 h-16 sm:w-20 sm:h-20 bg-${config.color}-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl"><i data-lucide="${config.icon}" size="36"></i></div>
                     <h3 class="text-${config.color}-600 font-black uppercase text-[10px] tracking-[0.3em] mb-4">Oblast ${Object.keys(categoryConfig).indexOf(cat) + 1} / 4</h3>
-                    <h2 class="text-xl sm:text-2xl font-black mb-4 font-poppins">${cat}</h2>
+                    <h2 class="text-xl sm:text-2xl font-black mb-4 font-poppins leading-snug">${cat}</h2>
                     <p class="text-slate-500 mb-10 text-sm leading-relaxed px-8">${config.desc}</p>
                     <button id="cont-btn" class="w-full bg-${config.color}-600 hover:bg-${config.color}-700 text-white py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg font-poppins">Vstoupit do sekce <i data-lucide="arrow-right"></i></button>
                 </div>`;
@@ -174,8 +160,8 @@
                 <div class="animate-fade-in flex flex-col h-full">
                     <div class="flex justify-between items-center mb-6">
                         <span class="text-[9px] font-black uppercase tracking-widest text-${config.color}-600 bg-${config.color}-50 px-3 py-1 rounded-full">${q.cat}</span>
-                        <div class="flex items-center gap-3">
-                            ${currentIdx > 0 ? `<button id="back-btn" class="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-[9px] font-bold uppercase"><i data-lucide="arrow-left" size="12"></i> Zpět</button>` : ''}
+                        <div class="flex items-center gap-3 text-slate-400">
+                            ${currentIdx > 0 ? `<button id="back-btn" class="hover:text-slate-600 flex items-center gap-1 text-[9px] font-bold uppercase"><i data-lucide="arrow-left" size="12"></i> Zpět</button>` : ''}
                             <span class="text-[9px] font-bold text-slate-300 uppercase font-mono">${currentIdx + 1} / ${questions.length}</span>
                         </div>
                     </div>
@@ -187,7 +173,7 @@
             q.options.forEach(opt => {
                 const b = document.createElement('div');
                 b.className = `option-card p-4 border-2 border-slate-100 rounded-xl cursor-pointer hover:border-${config.color}-500 hover:bg-${config.color}-50 transition-all text-slate-600 font-medium text-sm flex items-center gap-3 shadow-sm`;
-                b.innerHTML = `<div class="w-4 h-4 rounded-full border-2 border-slate-200 flex-shrink-0"></div> <span class="leading-tight text-slate-700">${opt.text}</span>`;
+                b.innerHTML = `<div class="w-4 h-4 rounded-full border-2 border-slate-200 flex-shrink-0"></div> <span class="leading-tight text-slate-700 font-medium">${opt.text}</span>`;
                 b.onclick = () => handleAnswer(opt.p);
                 container.appendChild(b);
             });
@@ -199,7 +185,6 @@
             history.push({ currentIdx, totalPoints, categoryScores: JSON.parse(JSON.stringify(categoryScores)) });
             totalPoints += p;
             categoryScores[questions[currentIdx].cat] += p;
-            
             if (currentIdx < questions.length - 1) {
                 const oldCat = questions[currentIdx].cat;
                 currentIdx++;
@@ -236,9 +221,13 @@
                              <p class="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-3">Týmová Identita</p>
                              <div id="alias-locked" class="py-2 text-xs font-bold text-slate-400 italic">Identitu odhalí lektor během workshopu...</div>
                              <div id="alias-unlocked" class="hidden">
-                                <div id="alias-reveal-btn-container"><button id="do-reveal-btn" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold text-[10px] uppercase shadow-lg">Zobrazit můj alias</button></div>
+                                <div id="alias-reveal-btn-container"><button id="do-reveal-btn" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold text-[10px] uppercase shadow-lg shadow-blue-200">Zobrazit můj alias</button></div>
                                 <div id="alias-name" class="hidden animate-fade-in"><span class="text-2xl font-black text-blue-600 uppercase tracking-tighter">${alias}</span></div>
                              </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100/50 shadow-sm"><h4 class="text-indigo-500 font-black uppercase text-[8px] mb-1">Přínos posunu</h4><p class="text-[11px] text-indigo-900/80 leading-snug">${result.whyMove}</p></div>
+                            <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100/50 shadow-sm"><h4 class="text-blue-500 font-black uppercase text-[8px] mb-1">Co čekat dále</h4><p class="text-[11px] text-blue-900/80 leading-snug">${result.nextDesc}</p></div>
                         </div>
                         <div id="ai-tip-box" class="bg-slate-900 text-white p-5 rounded-2xl shadow-xl">
                             <h3 class="text-blue-400 font-bold text-[10px] uppercase mb-3 flex items-center gap-2 font-poppins"><i data-lucide="rocket" size="14"></i> AI Pro-Tip</h3>
@@ -263,16 +252,11 @@
                 document.getElementById('alias-reveal-btn-container').classList.add('hidden');
                 document.getElementById('alias-name').classList.remove('hidden');
                 document.getElementById('alias-box').classList.add('border-blue-200', 'bg-blue-50/30');
-                lucide.createIcons();
             };
 
             document.getElementById('download-pdf-btn').onclick = function() {
                 const element = document.getElementById('report-to-pdf');
-                html2pdf().set({
-                    margin: [10, 15, 10, 15], filename: 'AI_Maturity_Report.pdf', image: { type: 'jpeg', quality: 1.0 },
-                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', width: 800 },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                }).from(element).save();
+                html2pdf().set({ margin: [10, 15, 10, 15], filename: 'AI_Report.pdf', html2canvas: { scale: 2, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'a4' } }).from(element).save();
             };
 
             if (user) {
@@ -284,31 +268,10 @@
             }
         }
 
-        const bootstrap = async () => {
-            if (window.location.protocol === 'file:') {
-                renderError("Anonymní přihlášení Firebase vyžaduje webový server (http/https). Protokol file:// není podporován.", true);
-                return;
-            }
-            const timeout = setTimeout(() => { if (!isUIReady) renderError("Spojení vypršelo. Pravděpodobně je blokována doména náhledu."); }, 10000);
-            onAuthStateChanged(auth, async (u) => {
-                if (u) {
-                    clearTimeout(timeout);
-                    user = u;
-                    await loadDraft();
-                } else {
-                    try {
-                        const cred = await signInAnonymously(auth);
-                        user = cred.user;
-                        clearTimeout(timeout);
-                        await loadDraft();
-                    } catch (err) {
-                        clearTimeout(timeout);
-                        renderError(err.message || "Přihlášení selhalo.");
-                    }
-                }
-            });
-        };
-        window.onload = bootstrap;
+        onAuthStateChanged(auth, async (u) => {
+            if (u) { user = u; await loadDraft(); }
+            else { signInAnonymously(auth).catch(e => console.error(e)); }
+        });
     </script>
 </body>
 </html>

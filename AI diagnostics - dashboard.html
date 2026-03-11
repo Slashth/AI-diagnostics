@@ -37,7 +37,7 @@
                     <span>Týmový režim</span>
                 </button>
 
-                <!-- Vylepšené tlačítko Reset s dynamickým hoverem -->
+                <!-- Tlačítko Reset s dynamickým hoverem -->
                 <button id="reset-btn" onclick="handleReset()" class="w-48 h-11 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all border border-white/5">
                     <i data-lucide="trash-2" size="14"></i>
                     <span id="reset-text">Vynulovat</span>
@@ -51,14 +51,19 @@
         </header>
 
         <div class="space-y-8">
+            <!-- Main Chart -->
             <div class="chart-card p-6 sm:p-10 rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden relative min-h-[450px] flex flex-col">
                 <h3 class="text-slate-400 text-[10px] font-bold uppercase mb-8 tracking-[0.25em] text-center">Rozložení kompetencí v reálném čase</h3>
                 <div class="relative flex-grow h-full"><canvas id="mainChart"></canvas></div>
             </div>
 
+            <!-- Team Builder Section -->
             <div id="teams-section" class="chart-card p-6 sm:p-10 rounded-[2.5rem] border border-white/5 shadow-2xl hidden animate-fade-in">
                 <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-                    <div><h3 class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.25em]">Týmové rozdělení</h3><p class="text-[10px] text-slate-600 uppercase mt-1 tracking-widest">Snake-Sort Algorithm</p></div>
+                    <div>
+                        <h3 class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.25em]">Týmové rozdělení</h3>
+                        <p class="text-[10px] text-slate-600 uppercase mt-1 tracking-widest">Snake-Sort Algorithm</p>
+                    </div>
                     <div class="flex items-center gap-4">
                         <div class="bg-slate-900 px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2">
                             <span class="text-[10px] font-bold text-slate-500 uppercase">Týmů:</span>
@@ -68,7 +73,9 @@
                     </div>
                 </div>
                 <div id="teams-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-slate-300">
-                    <div class="col-span-full py-12 text-center border-2 border-dashed border-white/5 rounded-[2rem]"><p class="text-slate-500 text-sm italic">Zadejte počet skupin a potvrďte.</p></div>
+                    <div class="col-span-full py-12 text-center border-2 border-dashed border-white/5 rounded-[2rem]">
+                        <p class="text-slate-500 text-sm italic">Zadejte počet skupin a potvrďte.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -124,10 +131,14 @@
         }
 
         window.toggleGlobalReveal = async () => {
-            globalRevealStatus = !globalRevealStatus;
-            console.log("Měním stav odhalení na:", globalRevealStatus);
-            const ref = doc(db, 'artifacts', internalAppId, 'public', 'data', 'settings', 'global');
-            await setDoc(ref, { allowAliasReveal: globalRevealStatus }, { merge: true });
+            try {
+                globalRevealStatus = !globalRevealStatus;
+                const ref = doc(db, 'artifacts', internalAppId, 'public', 'data', 'settings', 'global');
+                await setDoc(ref, { allowAliasReveal: globalRevealStatus }, { merge: true });
+                console.log("Stav odhalení uložen:", globalRevealStatus);
+            } catch (err) {
+                console.error("Chyba oprávnění! Ujistěte se, že cesta 'settings/global' je povolená v pravidlech Firebase.", err);
+            }
         };
 
         window.toggleTeamsUI = () => {
@@ -139,7 +150,6 @@
             lucide.createIcons();
         };
 
-        // --- OPRAVENÁ LOGIKA MAZÁNÍ S HOVER EFEKTEM ---
         window.handleReset = async () => {
             const txt = document.getElementById('reset-text');
             const btn = document.getElementById('reset-btn');
@@ -147,7 +157,6 @@
             if (!isConfirming) {
                 isConfirming = true;
                 txt.innerText = "Smazat vše?";
-                // Výměna barev a hover stavů
                 btn.classList.remove('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
                 btn.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
                 
@@ -168,12 +177,11 @@
                 const snap = await getDocs(colRef);
                 await Promise.all(snap.docs.map(d => deleteDoc(doc(db, 'artifacts', internalAppId, 'public', 'data', 'responses', d.id))));
                 
-                // Návrat do původního stavu po úspěchu
                 isConfirming = false;
                 txt.innerText = "Vynulovat";
                 btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'animate-pulse');
                 btn.classList.add('bg-slate-800', 'hover:bg-slate-700', 'text-slate-400');
-            } catch (e) { console.error("Chyba při mazání:", e); }
+            } catch (e) { console.error("Reset error:", e); }
         };
 
         window.generateTeams = () => {
@@ -200,8 +208,8 @@
 
         window.exportCSV = () => {
             if (lastData.length === 0) return;
-            let csv = "Alias;Level;Points;WeakestArea;Timestamp\n";
-            lastData.forEach(r => csv += `${r.alias || 'Anonym'};${r.levelName};${r.points};${r.weakestArea || ''};${r.ts}\n`);
+            let csv = "Alias;Level;Points;Timestamp\n";
+            lastData.forEach(r => csv += `${r.alias || 'Anonym'};${r.levelName};${r.points};${r.ts}\n`);
             const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -214,24 +222,20 @@
             initChart();
             lucide.createIcons();
 
-            // Sledování globálního nastavení (odhalení aliasů)
             onSnapshot(doc(db, 'artifacts', internalAppId, 'public', 'data', 'settings', 'global'), (snap) => {
                 if (snap.exists()) {
                     globalRevealStatus = snap.data().allowAliasReveal;
                     const btn = document.getElementById('master-reveal-btn');
                     const text = document.getElementById('reveal-text');
-                    
                     btn.classList.toggle('bg-blue-600', globalRevealStatus);
                     btn.classList.toggle('text-white', globalRevealStatus);
                     text.innerText = globalRevealStatus ? "Aliasy: Viditelné" : "Aliasy: Skryté";
-                    
                     const icon = document.getElementById('reveal-icon');
                     icon.setAttribute('data-lucide', globalRevealStatus ? 'eye' : 'eye-off');
                     lucide.createIcons();
                 }
-            });
+            }, (err) => console.error("Snapshot error (check rules):", err));
 
-            // Sledování odpovědí účastníků
             onSnapshot(collection(db, 'artifacts', internalAppId, 'public', 'data', 'responses'), (snap) => {
                 lastData = snap.docs.map(d => d.data());
                 const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
@@ -239,7 +243,6 @@
                 document.getElementById('total-count').innerText = lastData.length;
                 chart.data.datasets[0].data = Object.values(counts);
                 chart.update();
-                
                 if (lastData.length === 0) {
                     document.getElementById('teams-grid').innerHTML = '<div class="col-span-full py-12 text-center border-2 border-dashed border-white/5 rounded-[2rem]"><p class="text-slate-500 text-sm italic">Žádná data k rozdělení.</p></div>';
                 }
